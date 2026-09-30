@@ -8,7 +8,30 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Runtime dependencies only: devDependencies are never shipped.
+      - name: Audit production dependencies
+        run: npm audit --omit=dev
+
   lint:
     name: Lint & Format
     runs-on: ubuntu-latest
@@ -81,6 +104,36 @@ jobs:
           files: ./junit.xml
           fail_ci_if_error: true
           verbose: true
+
+  integration:
+    name: Integration (real Temporal dev server)
+    runs-on: ubuntu-latest
+    env:
+      TEMPORAL_DEV_SERVER_DIR: ${{ github.workspace }}/.temporal-dev-server
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The dev server binary is downloaded on first use; cache it, keyed on the lockfile (the SDK version moves with it).
+      - name: Cache Temporal dev server
+        uses: actions/cache@v4
+        with:
+          path: .temporal-dev-server
+          key: temporal-dev-server-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            temporal-dev-server-${{ runner.os }}-
+
+      - name: Run integration tests
+        run: npm run test:integration
 
   build:
     name: Build

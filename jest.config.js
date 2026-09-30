@@ -45,6 +45,8 @@ module.exports = {
             statements: 90,
         },
     },
+    // Integration suites need a Temporal dev server; run via `npm run test:integration`.
+    testPathIgnorePatterns: ['/node_modules/', '<rootDir>/test/integration/'],
     moduleFileExtensions: ['ts', 'js', 'json'],
     setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
     testTimeout: 5000,

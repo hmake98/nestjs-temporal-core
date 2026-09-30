@@ -1,0 +1,37 @@
+name: Bug report
+description: Something does not work as documented
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: Module registration options plus the smallest workflow/activity that shows the problem. A repo link is ideal.
+      render: typescript
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error output
+      description: Full stack trace and `cause` if present. Remove secrets (API keys, TLS material).
+      render: text
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: nestjs-temporal-core, @temporalio/* packages, @nestjs/core, Node.js
+      placeholder: "nestjs-temporal-core 3.4.0, @temporalio/client 1.24.0, @nestjs/core 11.2.5, Node 22"
+    validations:
+      required: true
+  - type: dropdown
+    id: server
+    attributes:
+      label: Temporal server
+      options: [Temporal Cloud, Self-hosted, Local dev server (temporal server start-dev), Other]

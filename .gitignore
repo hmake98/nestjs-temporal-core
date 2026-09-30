@@ -45,8 +45,11 @@ lerna-debug.log*
 /website/.docusaurus
 /website/docs/api
 
-# Old root docs/ (retired TypeDoc HTML output location, superseded by website/)
-/docs
+# Root docs/ holds only maintainer notes (retired TypeDoc HTML output lives elsewhere now);
+# track the explicit files below, ignore everything else.
+/docs/*
+!/docs/release-checklist.md
+!/docs/metrics.md
 
 # Claude Code
 .claude/settings.local.json
@@ -57,3 +60,7 @@ junit.xml
 # AI
 graphify-out/
 .codebase-memory/
+
+# Cached Temporal dev-server binary (integration tests)
+.temporal-dev-server/
+
