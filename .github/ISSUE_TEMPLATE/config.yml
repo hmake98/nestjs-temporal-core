@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://hmake98.github.io/nestjs-temporal-core/
+    about: Guides and API reference
+  - name: Temporal SDK or server questions
+    url: https://community.temporal.io/
+    about: Questions about Temporal itself rather than this NestJS integration
