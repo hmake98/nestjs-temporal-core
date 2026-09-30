@@ -26,7 +26,6 @@ Enterprise-ready [Temporal.io](https://temporal.io/) workflow orchestration for 
 | ❤️ **Health Monitoring** | Built-in `/health` endpoint plus programmatic `getHealth()`/`getStatistics()` |
 | 🧩 **Modular Architecture** | Use client-only, worker-only, activity-only, schedules-only, or the full stack |
 | 🏭 **Production Grade** | Connection pooling, multi-worker support, graceful shutdown, TLS for Temporal Cloud |
-| 🤖 **MCP Server** | Expose workflow/schedule operations to MCP-aware clients (Claude Code, Claude Desktop, etc.) over stdio |
 
 ## Installation
 
@@ -77,7 +76,6 @@ This README covers only the basics. The [**documentation site**](https://hmake98
 | [Advanced Usage](https://hmake98.github.io/nestjs-temporal-core/docs/advanced-usage) | Activity retry policies, workflow testing |
 | [Best Practices](https://hmake98.github.io/nestjs-temporal-core/docs/best-practices) | Do's and don'ts for workflows, activities, config, error handling, testing |
 | [Health Monitoring](https://hmake98.github.io/nestjs-temporal-core/docs/health-monitoring) | Built-in health module, custom health checks |
-| [MCP Server](https://hmake98.github.io/nestjs-temporal-core/docs/mcp-server) | Expose Temporal operations to MCP-aware clients, embedded or standalone CLI |
 | [Troubleshooting](https://hmake98.github.io/nestjs-temporal-core/docs/troubleshooting) | Common issues, debug mode, getting help |
 | [Migration Guide](https://hmake98.github.io/nestjs-temporal-core/docs/migration-guide) | Upgrading across versions and SDK bumps |
 | [API Reference](https://hmake98.github.io/nestjs-temporal-core/docs/api) | Generated from source (TSDoc) |

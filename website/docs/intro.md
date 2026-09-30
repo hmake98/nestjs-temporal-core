@@ -31,7 +31,6 @@ NestJS Temporal Core bridges NestJS's dependency injection system with Temporal.
 - **Health Monitoring** — Built-in health checks and comprehensive status reporting
 - **Typed Workflow Proxy** — Generic `IWorkflowProxy<T>` that infers start args, signal args, and query return types from your workflow function signature
 - **Signal-with-Start** — Atomic "ensure running + signal" on both the low-level client service and the high-level `TemporalService`
-- **MCP Server** — Expose workflow/schedule operations to MCP-aware clients (Claude Code, Claude Desktop, etc.) over stdio, embedded or standalone
 
 ### Enterprise Features
 
