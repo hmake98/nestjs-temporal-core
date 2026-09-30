@@ -30,9 +30,6 @@ export { TemporalScheduleService } from './services/temporal-schedule.service';
 /** Typed workflow proxy — factory service, interface, and class */
 export { WorkflowProxyFactory, IWorkflowProxy, WorkflowProxy } from './workflow-proxy';
 
-/** MCP server exposing Temporal operations to MCP-aware clients over stdio */
-export { TemporalMcpModule, TemporalMcpServer, TemporalMcpModuleOptions } from './mcp';
-
 /** All utility functions (validation, metadata, logging) */
 export * from './utils';
 

@@ -64,4 +64,4 @@ export class HealthController {
 }
 ```
 
-Next: [MCP Server](./mcp-server.md).
+Next: [Troubleshooting](./troubleshooting.md).

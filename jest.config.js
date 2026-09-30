@@ -16,14 +16,7 @@ module.exports = {
             },
         ],
     },
-    collectCoverageFrom: [
-        'src/**/*.ts',
-        '!src/**/*.d.ts',
-        '!src/index.ts',
-        '!src/interfaces.ts',
-        '!src/mcp/mcp.interfaces.ts',
-        '!src/bin/**',
-    ],
+    collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts', '!src/index.ts', '!src/interfaces.ts'],
     coverageDirectory: 'coverage',
     coverageReporters: ['text', 'lcov', 'html', 'json-summary'],
     // Emit JUnit XML alongside the normal console output so Codecov Test
