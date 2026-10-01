@@ -16,6 +16,7 @@
   "types": "dist/index.d.ts",
   "files": [
     "dist/**/*",
+    "testing/package.json",
     "LICENSE",
     "README.md",
     "CHANGELOG.md",
@@ -42,6 +43,7 @@
     "release:dry": "npm run build && npm publish --dry-run",
     "test": "jest --coverage --passWithNoTests --forceExit",
     "test:unit": "jest --testPathPatterns=test/unit --testPathIgnorePatterns=test/performance --coverage --passWithNoTests --forceExit",
+    "test:smoke": "node scripts/consumer-smoke.js",
     "test:integration": "jest --config test/integration/jest.config.js --runInBand --forceExit",
     "test:ci": "jest --coverage --passWithNoTests --forceExit",
     "make-badges": "istanbul-badges-readme",
@@ -88,8 +90,10 @@
   "peerDependencies": {
     "@nestjs/common": "^9.0.0 || ^10.0.0 || ^11.0.0",
     "@nestjs/core": "^9.0.0 || ^10.0.0 || ^11.0.0",
+    "@nestjs/testing": "^9.0.0 || ^10.0.0 || ^11.0.0",
     "@temporalio/client": "^1.15.0 || ^1.19.0",
     "@temporalio/common": "^1.15.0 || ^1.19.0",
+    "@temporalio/testing": "^1.15.0 || ^1.19.0",
     "@temporalio/worker": "^1.15.0 || ^1.19.0",
     "@temporalio/workflow": "^1.15.0 || ^1.19.0",
     "reflect-metadata": "^0.2.2",
@@ -98,6 +102,12 @@
   "peerDependenciesMeta": {
     "@temporalio/common": {
       "optional": false
+    },
+    "@nestjs/testing": {
+      "optional": true
+    },
+    "@temporalio/testing": {
+      "optional": true
     }
   },
   "devDependencies": {

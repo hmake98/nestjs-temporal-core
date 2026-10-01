@@ -64,7 +64,17 @@ export class WorkerModule {}
 
 ## Graceful shutdown
 
-On `SIGTERM` the worker stops polling, waits for in-flight activities to finish (bounded by `shutdownTimeout`, default 30 s), then the app closes. This only works if `app.enableShutdownHooks()` was called; without it the process exits immediately and running activities are retried by Temporal after their timeouts.
+On `SIGTERM` the worker stops polling for new tasks. By default the Temporal SDK then **cancels** in-flight activities immediately. To let them finish, set a grace period:
+
+```typescript
+worker: {
+  workflowsPath: require.resolve('./workflows'),
+  activityClasses: [PaymentActivity],
+  workerOptions: { shutdownGraceTime: '30s' }, // in-flight activities may run this long
+},
+```
+
+Also call `app.enableShutdownHooks()`; without it the process exits immediately and Temporal retries the interrupted activities after their timeouts. `shutdownTimeout` (default 30 s) bounds how long the application waits for the shutdown before moving on.
 
 ## Starting workflows from a worker-only app
 

@@ -4,6 +4,9 @@
 
 ### Changes
 
+- feat: `nestjs-temporal-core/testing` entry: `TemporalTestingModule` (fake `TemporalService` / `TemporalClientService` with call recording, configurable results and errors), `createActivityHarness` and `overrideActivity`. `@nestjs/testing` and `@temporalio/testing` are optional peer dependencies.
+- test: integration suites for signal, query, update, signalWithStart, cancel/terminate, schedule lifecycle and shutdown drain; consumer smoke test (`npm run test:smoke`) wired into CI.
+- docs: "Testing Your Temporal Code" page; worker-only guide now documents `shutdownGraceTime`.
 - feat: `TemporalClientError` (exported) keeps the original SDK error as `cause`, with `originalName`, `grpcCode` and `grpcDetails`; applied to the client, facade and schedule services. Message text is unchanged.
 - feat: `TemporalService.upsertSchedule`, `updateSchedule` and `deleteSchedule` delegate to the schedule service.
 - docs: worker-only app guide and error-handling page.

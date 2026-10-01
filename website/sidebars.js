@@ -8,6 +8,7 @@ const sidebars = {
     'advanced-configuration',
     'advanced-usage',
     'best-practices',
+    'testing',
     'worker-only-apps',
     'error-handling',
     'health-monitoring',
