@@ -30,6 +30,9 @@ export { TemporalScheduleService } from './services/temporal-schedule.service';
 /** Typed workflow proxy — factory service, interface, and class */
 export { WorkflowProxyFactory, IWorkflowProxy, WorkflowProxy } from './workflow-proxy';
 
+/** Typed errors that preserve the original SDK error as `cause` */
+export * from './errors';
+
 /** All utility functions (validation, metadata, logging) */
 export * from './utils';
 

@@ -20,12 +20,19 @@ import {
     MultipleWorkersInfo,
     CreateWorkerResult,
     Worker,
+    ScheduleCreationOptions,
+    ScheduleUpsertResult,
+    ScheduleUpdateResult,
+    ScheduleUpdateOptions,
+    ScheduleDescription,
+    ScheduleDeletionResult,
 } from '../interfaces';
 import { TemporalClientService } from './temporal-client.service';
 import { TemporalWorkerManagerService } from './temporal-worker.service';
 import { TemporalScheduleService } from './temporal-schedule.service';
 import { TemporalDiscoveryService } from './temporal-discovery.service';
 import { TemporalMetadataAccessor } from './temporal-metadata.service';
+import { toError } from '../errors';
 import { createLogger, TemporalLogger } from '../utils/logger';
 import { DEFAULT_TASK_QUEUE } from '../constants';
 
@@ -83,7 +90,7 @@ export class TemporalService implements OnModuleInit, OnModuleDestroy {
 
             return {
                 success: false,
-                error: error instanceof Error ? error : new Error(this.extractErrorMessage(error)),
+                error: toError(error, this.extractErrorMessage(error)),
                 servicesInitialized: {
                     client: false,
                     worker: false,
@@ -202,7 +209,7 @@ export class TemporalService implements OnModuleInit, OnModuleDestroy {
             };
         } catch (error) {
             this.logger.error(`Failed to start workflow '${workflowType}'`, error);
-            throw error instanceof Error ? error : new Error(this.extractErrorMessage(error));
+            throw toError(error, this.extractErrorMessage(error));
         }
     }
 
@@ -232,7 +239,7 @@ export class TemporalService implements OnModuleInit, OnModuleDestroy {
                 `Failed to signal workflow '${workflowId}' with '${signalName}'`,
                 error,
             );
-            throw error instanceof Error ? error : new Error(this.extractErrorMessage(error));
+            throw toError(error, this.extractErrorMessage(error));
         }
     }
 
@@ -286,7 +293,7 @@ export class TemporalService implements OnModuleInit, OnModuleDestroy {
                 `Failed to signalWithStart workflow '${workflowType}' with signal '${signalName}'`,
                 error,
             );
-            throw error instanceof Error ? error : new Error(this.extractErrorMessage(error));
+            throw toError(error, this.extractErrorMessage(error));
         }
     }
 
@@ -321,7 +328,7 @@ export class TemporalService implements OnModuleInit, OnModuleDestroy {
                 `Failed to query workflow '${workflowId}' with '${queryName}'`,
                 error,
             );
-            throw error instanceof Error ? error : new Error(this.extractErrorMessage(error));
+            throw toError(error, this.extractErrorMessage(error));
         }
     }
 
@@ -353,7 +360,7 @@ export class TemporalService implements OnModuleInit, OnModuleDestroy {
         } catch (error) {
             return {
                 success: false,
-                error: error instanceof Error ? error : new Error(this.extractErrorMessage(error)),
+                error: toError(error, this.extractErrorMessage(error)),
                 workflowId,
                 reason,
             };
@@ -375,10 +382,39 @@ export class TemporalService implements OnModuleInit, OnModuleDestroy {
         } catch (error) {
             return {
                 success: false,
-                error: error instanceof Error ? error : new Error(this.extractErrorMessage(error)),
+                error: toError(error, this.extractErrorMessage(error)),
                 workflowId,
             };
         }
+    }
+
+    /**
+     * Create a schedule, or update it in place if `scheduleId` already exists.
+     * Safe to call on every app start.
+     */
+    async upsertSchedule(options: ScheduleCreationOptions): Promise<ScheduleUpsertResult> {
+        this.ensureInitialized();
+        return this.scheduleService.upsertSchedule(options);
+    }
+
+    /**
+     * Update an existing schedule. `updateFn` receives the current description
+     * and returns the new desired options.
+     */
+    async updateSchedule(
+        scheduleId: string,
+        updateFn: (previous: ScheduleDescription) => ScheduleUpdateOptions,
+    ): Promise<ScheduleUpdateResult> {
+        this.ensureInitialized();
+        return this.scheduleService.updateSchedule(scheduleId, updateFn);
+    }
+
+    /**
+     * Delete a schedule by id.
+     */
+    async deleteSchedule(scheduleId: string): Promise<ScheduleDeletionResult> {
+        this.ensureInitialized();
+        return this.scheduleService.deleteSchedule(scheduleId);
     }
 
     /**
@@ -526,7 +562,7 @@ export class TemporalService implements OnModuleInit, OnModuleDestroy {
         } catch (error) {
             return {
                 success: false,
-                error: error instanceof Error ? error : new Error(this.extractErrorMessage(error)),
+                error: toError(error, this.extractErrorMessage(error)),
                 activityName: name,
                 executionTime: Date.now() - startTime,
                 args,

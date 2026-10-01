@@ -40,6 +40,7 @@ import {
     TemporalOverlapPolicy,
 } from '../interfaces';
 import { TemporalMetadataAccessor } from './temporal-metadata.service';
+import { toError } from '../errors';
 import { createLogger, TemporalLogger } from '../utils/logger';
 
 /**
@@ -187,7 +188,7 @@ export class TemporalScheduleService implements OnModuleInit, OnModuleDestroy {
                     this.scheduleClient = undefined;
                     return {
                         success: false,
-                        error: error instanceof Error ? error : new Error(errorMessage),
+                        error: toError(error, errorMessage),
                         source: 'none',
                     };
                 }
@@ -197,7 +198,7 @@ export class TemporalScheduleService implements OnModuleInit, OnModuleDestroy {
             this.scheduleClient = undefined;
             return {
                 success: false,
-                error: error instanceof Error ? error : new Error(this.extractErrorMessage(error)),
+                error: toError(error, this.extractErrorMessage(error)),
                 source: 'none',
             };
         }
@@ -297,7 +298,7 @@ export class TemporalScheduleService implements OnModuleInit, OnModuleDestroy {
             return {
                 success: false,
                 scheduleId: (scheduleMetadata.scheduleId as string) || `${metatype.name}-schedule`,
-                error: error instanceof Error ? error : new Error(errorMessage),
+                error: toError(error, errorMessage),
             };
         }
     }
@@ -365,7 +366,7 @@ export class TemporalScheduleService implements OnModuleInit, OnModuleDestroy {
         } catch (error) {
             return {
                 success: false,
-                error: error instanceof Error ? error : new Error('Unknown error'),
+                error: toError(error),
             };
         }
     }
@@ -462,7 +463,7 @@ export class TemporalScheduleService implements OnModuleInit, OnModuleDestroy {
         } catch (error) {
             return {
                 success: false,
-                error: error instanceof Error ? error : new Error('Unknown error'),
+                error: toError(error),
             };
         }
     }
@@ -532,7 +533,7 @@ export class TemporalScheduleService implements OnModuleInit, OnModuleDestroy {
             return {
                 success: false,
                 scheduleId: options.scheduleId,
-                error: error instanceof Error ? error : new Error(this.extractErrorMessage(error)),
+                error: toError(error, this.extractErrorMessage(error)),
             };
         }
     }
@@ -595,7 +596,7 @@ export class TemporalScheduleService implements OnModuleInit, OnModuleDestroy {
             return {
                 success: false,
                 scheduleId: options.scheduleId,
-                error: error instanceof Error ? error : new Error(this.extractErrorMessage(error)),
+                error: toError(error, this.extractErrorMessage(error)),
             };
         }
     }
@@ -624,7 +625,7 @@ export class TemporalScheduleService implements OnModuleInit, OnModuleDestroy {
             this.logger.error(`Failed to get schedule '${scheduleId}'`, error);
             return {
                 success: false,
-                error: error instanceof Error ? error : new Error(this.extractErrorMessage(error)),
+                error: toError(error, this.extractErrorMessage(error)),
             };
         }
     }
@@ -664,7 +665,7 @@ export class TemporalScheduleService implements OnModuleInit, OnModuleDestroy {
             return {
                 success: false,
                 scheduleId,
-                error: error instanceof Error ? error : new Error(this.extractErrorMessage(error)),
+                error: toError(error, this.extractErrorMessage(error)),
             };
         }
     }
@@ -691,7 +692,7 @@ export class TemporalScheduleService implements OnModuleInit, OnModuleDestroy {
             return {
                 success: false,
                 scheduleId,
-                error: error instanceof Error ? error : new Error(this.extractErrorMessage(error)),
+                error: toError(error, this.extractErrorMessage(error)),
             };
         }
     }
@@ -721,7 +722,7 @@ export class TemporalScheduleService implements OnModuleInit, OnModuleDestroy {
             return {
                 success: false,
                 scheduleId,
-                error: error instanceof Error ? error : new Error(this.extractErrorMessage(error)),
+                error: toError(error, this.extractErrorMessage(error)),
             };
         }
     }
@@ -749,7 +750,7 @@ export class TemporalScheduleService implements OnModuleInit, OnModuleDestroy {
             return {
                 success: false,
                 scheduleId,
-                error: error instanceof Error ? error : new Error(this.extractErrorMessage(error)),
+                error: toError(error, this.extractErrorMessage(error)),
             };
         }
     }
@@ -784,7 +785,7 @@ export class TemporalScheduleService implements OnModuleInit, OnModuleDestroy {
             return {
                 success: false,
                 scheduleId,
-                error: error instanceof Error ? error : new Error(this.extractErrorMessage(error)),
+                error: toError(error, this.extractErrorMessage(error)),
             };
         }
     }
@@ -811,7 +812,7 @@ export class TemporalScheduleService implements OnModuleInit, OnModuleDestroy {
             return {
                 success: false,
                 scheduleId,
-                error: error instanceof Error ? error : new Error(this.extractErrorMessage(error)),
+                error: toError(error, this.extractErrorMessage(error)),
             };
         }
     }
@@ -842,7 +843,7 @@ export class TemporalScheduleService implements OnModuleInit, OnModuleDestroy {
             this.logger.error('Failed to list schedules', error);
             return {
                 success: false,
-                error: error instanceof Error ? error : new Error(this.extractErrorMessage(error)),
+                error: toError(error, this.extractErrorMessage(error)),
             };
         }
     }

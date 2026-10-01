@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased]
+
+### Changes
+
+- feat: `TemporalClientError` (exported) keeps the original SDK error as `cause`, with `originalName`, `grpcCode` and `grpcDetails`; applied to the client, facade and schedule services. Message text is unchanged.
+- feat: `TemporalService.upsertSchedule`, `updateSchedule` and `deleteSchedule` delegate to the schedule service.
+- docs: worker-only app guide and error-handling page.
+
 ## [3.4.0] - 2026-07-11
 
 ### Changes
