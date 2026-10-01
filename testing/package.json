@@ -1,0 +1,6 @@
+{
+  "name": "nestjs-temporal-core-testing",
+  "private": true,
+  "main": "../dist/testing/index.js",
+  "types": "../dist/testing/index.d.ts"
+}
