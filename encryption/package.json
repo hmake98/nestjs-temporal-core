@@ -1,0 +1,6 @@
+{
+  "name": "nestjs-temporal-core-encryption",
+  "private": true,
+  "main": "../dist/encryption/index.js",
+  "types": "../dist/encryption/index.d.ts"
+}

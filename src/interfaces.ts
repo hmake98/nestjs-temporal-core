@@ -16,6 +16,7 @@ export { Worker } from '@temporalio/worker';
 export type { Workflow, WorkflowResultType } from '@temporalio/workflow';
 
 import { Type } from '@nestjs/common';
+import type { TemporalRuntimeOptions, CorrelationOptions } from './observability/types';
 import {
     ScheduleClient,
     ScheduleHandle,
@@ -256,6 +257,31 @@ export interface WorkerDefinition {
 export interface TemporalOptions extends LoggerConfig {
     /** Connection config — see {@link ClientConnectionOptions}. */
     connection?: ClientConnectionOptions;
+    /**
+     * Process-wide SDK runtime: route SDK/Core logs to the Nest logger, configure metrics.
+     * Installed once, before the first client or worker; later calls are no-ops.
+     */
+    runtime?: TemporalRuntimeOptions;
+    /**
+     * Propagate a correlation id (`x-correlation-id`) from the client call through the
+     * workflow to every activity, and tag library logs with it. `true` uses defaults.
+     * Off by default. Not applied to prebuilt `workflowBundle`s (add
+     * `nestjs-temporal-core/dist/observability/workflow-interceptors` to the bundle).
+     */
+    correlation?: boolean | CorrelationOptions;
+    /**
+     * One `DataConverter` applied to both the client and the worker, so they always agree
+     * (for example payload encryption from `nestjs-temporal-core/encryption`). A
+     * `connection.dataConverter` or `worker.workerOptions.dataConverter` still wins for its side.
+     * A custom payload *converter* running inside workflows also needs the bundler's
+     * `payloadConverterPath`; payload *codecs* do not.
+     */
+    dataConverter?: DataConverter;
+    /**
+     * Turn security warnings (plaintext connection to a remote server, credentials without
+     * TLS) into startup errors. Default `false`: warnings only.
+     */
+    strictSecurity?: boolean;
     taskQueue?: string;
     /** Single-worker config. Equivalent to `Omit<WorkerDefinition, 'taskQueue'>`. */
     worker?: Omit<WorkerDefinition, 'taskQueue'>;
@@ -402,6 +428,12 @@ export interface LoggerConfig {
      * @default false
      */
     muteErrors?: boolean;
+    /**
+     * Extra object keys whose values are replaced with `[REDACTED]` when the library
+     * logs structured data. Credentials, TLS material and payload bodies are always
+     * redacted; see `DEFAULT_REDACT_KEYS`. Matching ignores case, `-` and `_`.
+     */
+    redactKeys?: string[];
 }
 
 // ==========================================
@@ -1943,6 +1975,26 @@ export interface ServiceShutdownResult {
         client: boolean;
         schedule: boolean;
     };
+}
+
+/**
+ * Options for `TemporalHealthModule.register()`.
+ */
+export interface TemporalHealthOptions {
+    /**
+     * `'full'` (default) returns component counts, worker state and uptime.
+     * `'minimal'` returns only `{ status, timestamp }`, for endpoints reachable by
+     * untrusted callers (load balancer probes, public ingress).
+     */
+    detail?: 'full' | 'minimal';
+}
+
+/**
+ * Health response returned when `detail: 'minimal'`.
+ */
+export interface MinimalHealthResponse {
+    status: 'healthy' | 'degraded' | 'unhealthy';
+    timestamp: string;
 }
 
 /**

@@ -25,8 +25,13 @@ export interface IntegrationEnv {
  */
 export async function createTestEnv(
     overrides: {
-        /** Extra module options, merged over the defaults. */
-        options?: Partial<TemporalOptions>;
+        /**
+         * Extra module options, merged over the defaults. A function receives the dev
+         * server address and the task queue, for options that depend on them.
+         */
+        options?:
+            | Partial<TemporalOptions>
+            | ((ctx: { address: string; taskQueue: string }) => Partial<TemporalOptions>);
         /** Activity classes registered on the worker. */
         activityClasses?: Array<new (...args: never[]) => object>;
         /** Extra Nest providers (the activity classes are added automatically). */
@@ -52,7 +57,9 @@ export async function createTestEnv(
                     activityClasses,
                     autoStart: true,
                 },
-                ...overrides.options,
+                ...(typeof overrides.options === 'function'
+                    ? overrides.options({ address: env.address, taskQueue })
+                    : overrides.options),
             }),
         ],
         providers: [...activityClasses, ...(overrides.providers ?? [])],

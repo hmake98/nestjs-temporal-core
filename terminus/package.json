@@ -1,0 +1,6 @@
+{
+  "name": "nestjs-temporal-core-terminus",
+  "private": true,
+  "main": "../dist/terminus/index.js",
+  "types": "../dist/terminus/index.d.ts"
+}
