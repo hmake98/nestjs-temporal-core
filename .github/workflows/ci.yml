@@ -55,11 +55,17 @@ jobs:
         run: npm run format:check
 
   test:
-    name: Test (Node ${{ matrix.node-version }})
+    name: Test (Node ${{ matrix.node-version }}, NestJS ${{ matrix.nest }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [ 20, 22, 24 ]
+        # NestJS 12 is ESM-only; Jest loads it via require(esm), which needs Node 24.9+.
+        # Older Node versions are covered against NestJS 11.
+        include:
+          - { node-version: 24, nest: 12 }
+          - { node-version: 20, nest: 11 }
+          - { node-version: 22, nest: 11 }
+          - { node-version: 24, nest: 11 }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -73,11 +79,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install NestJS ${{ matrix.nest }}
+        if: matrix.nest != 12
+        run: >
+          npm install --no-save
+          @nestjs/common@${{ matrix.nest }} @nestjs/core@${{ matrix.nest }}
+          @nestjs/testing@${{ matrix.nest }} @nestjs/terminus@${{ matrix.nest }}
+
       - name: Run tests
         run: npm run test:ci
 
       - name: Upload coverage
-        if: matrix.node-version == 20
+        if: matrix.node-version == 24 && matrix.nest == 12
         uses: codecov/codecov-action@v5
         with:
           # Explicit token — tokenless OIDC is flaky on GitHub Actions.
@@ -96,7 +109,7 @@ jobs:
       # in PR comments. `!cancelled()` ensures we still upload when a
       # test has failed — failed test data is the whole point of this.
       - name: Upload test results to Codecov
-        if: ${{ !cancelled() && matrix.node-version == 20 }}
+        if: ${{ !cancelled() && matrix.node-version == 24 && matrix.nest == 12 }}
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -117,7 +130,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: "npm"
 
       - name: Install dependencies

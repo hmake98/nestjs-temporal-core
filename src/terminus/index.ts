@@ -3,7 +3,7 @@
  * Requires the optional peer `@nestjs/terminus`; the main entry never loads it.
  */
 import { Injectable } from '@nestjs/common';
-import { HealthCheckError, HealthIndicator, type HealthIndicatorResult } from '@nestjs/terminus';
+import { HealthIndicatorService, type HealthIndicatorResult } from '@nestjs/terminus';
 import { TemporalService } from '../services/temporal.service';
 
 /**
@@ -22,15 +22,16 @@ import { TemporalService } from '../services/temporal.service';
  * ```
  */
 @Injectable()
-export class TemporalHealthIndicator extends HealthIndicator {
-    constructor(private readonly temporalService: TemporalService) {
-        super();
-    }
+export class TemporalHealthIndicator {
+    constructor(
+        private readonly temporalService: TemporalService,
+        private readonly healthIndicatorService: HealthIndicatorService,
+    ) {}
 
     /**
      * @param key result key (default `temporal`)
      * @param options `requireWorker`: also fail when no worker is running
-     * @throws HealthCheckError when Temporal is unhealthy, as Terminus expects
+     * @returns a `down` result when Temporal is unhealthy; Terminus turns it into a 503
      */
     async isHealthy(
         key = 'temporal',
@@ -45,11 +46,7 @@ export class TemporalHealthIndicator extends HealthIndicator {
 
         const workerOk = !options.requireWorker || this.temporalService.isWorkerRunning();
         const healthy = status === 'healthy' && workerOk;
-        const result = this.getStatus(key, healthy, { state: status });
-
-        if (!healthy) {
-            throw new HealthCheckError('Temporal health check failed', result);
-        }
-        return result;
+        const session = this.healthIndicatorService.check(key);
+        return healthy ? session.up({ state: status }) : session.down({ state: status });
     }
 }
