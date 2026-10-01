@@ -19,6 +19,7 @@ import {
     ClientServiceStatus,
     ClientHealthStatus,
 } from '../interfaces';
+import { wrapError } from '../errors';
 import { createLogger, TemporalLogger } from '../utils/logger';
 
 /**
@@ -198,7 +199,7 @@ export class TemporalClientService implements OnModuleInit {
                     `Failed to start workflow '${workflowType}' [${workflowId}] on queue '${taskQueue}' after ${attempt} attempt(s)`,
                     error,
                 );
-                throw new Error(`Failed to start workflow '${workflowType}': ${message}`);
+                throw wrapError(`Failed to start workflow '${workflowType}': ${message}`, error);
             }
         }
 
@@ -222,7 +223,7 @@ export class TemporalClientService implements OnModuleInit {
         } catch (error) {
             const message = this.extractErrorMessage(error);
             this.logger.error(`Failed to get workflow handle for '${workflowId}'`, error);
-            throw new Error(`Failed to get workflow handle for ${workflowId}: ${message}`);
+            throw wrapError(`Failed to get workflow handle for ${workflowId}: ${message}`, error);
         }
     }
 
@@ -237,8 +238,9 @@ export class TemporalClientService implements OnModuleInit {
             this.logger.info(`Terminated workflow '${workflowId}'${reason ? `: ${reason}` : ''}`);
         } catch (error) {
             this.logger.error(`Failed to terminate workflow '${workflowId}'`, error);
-            throw new Error(
+            throw wrapError(
                 `Failed to terminate workflow ${workflowId}: ${this.extractErrorMessage(error)}`,
+                error,
             );
         }
     }
@@ -254,8 +256,9 @@ export class TemporalClientService implements OnModuleInit {
             this.logger.info(`Cancelled workflow '${workflowId}'`);
         } catch (error) {
             this.logger.error(`Failed to cancel workflow '${workflowId}'`, error);
-            throw new Error(
+            throw wrapError(
                 `Failed to cancel workflow ${workflowId}: ${this.extractErrorMessage(error)}`,
+                error,
             );
         }
     }
@@ -279,8 +282,9 @@ export class TemporalClientService implements OnModuleInit {
                 `Failed to send signal '${signalName}' to workflow '${workflowId}'`,
                 error,
             );
-            throw new Error(
+            throw wrapError(
                 `Failed to send signal '${signalName}' to workflow ${workflowId}: ${this.extractErrorMessage(error)}`,
+                error,
             );
         }
     }
@@ -393,7 +397,10 @@ export class TemporalClientService implements OnModuleInit {
                 `Failed to signalWithStart workflow '${workflowType}' [${workflowId}]`,
                 error,
             );
-            throw new Error(`Failed to signalWithStart workflow '${workflowType}': ${message}`);
+            throw wrapError(
+                `Failed to signalWithStart workflow '${workflowType}': ${message}`,
+                error,
+            );
         }
     }
 
@@ -414,8 +421,9 @@ export class TemporalClientService implements OnModuleInit {
             return result as T;
         } catch (error) {
             this.logger.error(`Failed to query '${queryName}' on workflow '${workflowId}'`, error);
-            throw new Error(
+            throw wrapError(
                 `Failed to query '${queryName}' on workflow ${workflowId}: ${this.extractErrorMessage(error)}`,
+                error,
             );
         }
     }
@@ -479,8 +487,9 @@ export class TemporalClientService implements OnModuleInit {
                 `Failed to execute update '${updateName}' on workflow '${workflowId}'`,
                 error,
             );
-            throw new Error(
+            throw wrapError(
                 `Failed to execute update '${updateName}' on workflow ${workflowId}: ${this.extractErrorMessage(error)}`,
+                error,
             );
         }
     }
@@ -546,8 +555,9 @@ export class TemporalClientService implements OnModuleInit {
                 `Failed to start update '${updateName}' on workflow '${workflowId}'`,
                 error,
             );
-            throw new Error(
+            throw wrapError(
                 `Failed to start update '${updateName}' on workflow ${workflowId}: ${this.extractErrorMessage(error)}`,
+                error,
             );
         }
     }
@@ -599,7 +609,10 @@ export class TemporalClientService implements OnModuleInit {
             this.logger.debug('Completed activity');
         } catch (error) {
             this.logger.error('Failed to complete activity', error);
-            throw new Error(`Failed to complete activity: ${this.extractErrorMessage(error)}`);
+            throw wrapError(
+                `Failed to complete activity: ${this.extractErrorMessage(error)}`,
+                error,
+            );
         }
     }
 
@@ -622,8 +635,9 @@ export class TemporalClientService implements OnModuleInit {
             this.logger.debug('Failed activity (reported to server)');
         } catch (error) {
             this.logger.error('Failed to report activity failure', error);
-            throw new Error(
+            throw wrapError(
                 `Failed to report activity failure: ${this.extractErrorMessage(error)}`,
+                error,
             );
         }
     }
@@ -647,8 +661,9 @@ export class TemporalClientService implements OnModuleInit {
             this.logger.verbose('Sent activity heartbeat');
         } catch (error) {
             this.logger.error('Failed to send activity heartbeat', error);
-            throw new Error(
+            throw wrapError(
                 `Failed to send activity heartbeat: ${this.extractErrorMessage(error)}`,
+                error,
             );
         }
     }
@@ -675,8 +690,9 @@ export class TemporalClientService implements OnModuleInit {
             this.logger.debug('Reported activity cancellation');
         } catch (error) {
             this.logger.error('Failed to report activity cancellation', error);
-            throw new Error(
+            throw wrapError(
                 `Failed to report activity cancellation: ${this.extractErrorMessage(error)}`,
+                error,
             );
         }
     }
@@ -711,8 +727,9 @@ export class TemporalClientService implements OnModuleInit {
             return handle;
         } catch (error) {
             this.logger.error(`Failed to start standalone activity '${activityType}'`, error);
-            throw new Error(
+            throw wrapError(
                 `Failed to start standalone activity '${activityType}': ${this.extractErrorMessage(error)}`,
+                error,
             );
         }
     }
@@ -745,8 +762,9 @@ export class TemporalClientService implements OnModuleInit {
             return result;
         } catch (error) {
             this.logger.error(`Failed to execute standalone activity '${activityType}'`, error);
-            throw new Error(
+            throw wrapError(
                 `Failed to execute standalone activity '${activityType}': ${this.extractErrorMessage(error)}`,
+                error,
             );
         }
     }
@@ -795,8 +813,9 @@ export class TemporalClientService implements OnModuleInit {
             return await this.client!.activity.count(query);
         } catch (error) {
             this.logger.error('Failed to count standalone activities', error);
-            throw new Error(
+            throw wrapError(
                 `Failed to count standalone activities: ${this.extractErrorMessage(error)}`,
+                error,
             );
         }
     }
