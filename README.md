@@ -83,6 +83,8 @@ This README covers only the basics. The [**documentation site**](https://hmake98
 ## Requirements
 
 Node.js >= 20.3.0 • NestJS 9–12 • Temporal Server >= 1.20.0
+
+NestJS 12 is ESM-only. Loading it from this package's CommonJS build needs Node 20.19+ or 22.12+ (`require(esm)`). If you test with Jest, see [Testing with NestJS 12](https://hmake98.github.io/nestjs-temporal-core/docs/testing#testing-with-nestjs-12). The optional `nestjs-temporal-core/terminus` entry needs `@nestjs/terminus` 11 or 12.
 (on Node 16/18, pin `@temporalio/*` to `^1.15.0` and stay on this package's previous minor)
 
 ## Contributing & Support

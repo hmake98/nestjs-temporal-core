@@ -126,6 +126,14 @@ await temporal.signalWithStart(
 );
 ```
 
+## Upgrading to NestJS 12
+
+`@nestjs/common`, `@nestjs/core` and `@nestjs/testing` now accept `^12.0.0`, and `@nestjs/terminus` accepts `^11.0.0 || ^12.0.0`. No code change is needed in your app for the core module.
+
+- **Node.js**: NestJS 12 is ESM-only. This package is CommonJS, so it loads NestJS through `require(esm)`, which needs Node 20.19+ or 22.12+.
+- **Jest**: Jest 30 can load NestJS 12 only on Node 24.9+ with `NODE_OPTIONS=--experimental-vm-modules`. See [Testing with NestJS 12](./testing.md#testing-with-nestjs-12).
+- **Terminus**: `@nestjs/terminus` 12 removed `HealthIndicator` and `HealthCheckError`. `TemporalHealthIndicator` from `nestjs-temporal-core/terminus` now returns a `down` result instead of throwing, and Terminus responds with 503 as before. If you called `isHealthy()` yourself and caught `HealthCheckError`, check `result.temporal.status === 'down'` instead. Support for `@nestjs/terminus` 10 was dropped, because the indicator now uses `HealthIndicatorService` (added in 11).
+
 ## Migrating to the `@temporalio/*` 1.19 upgrade (Workflow Updates, Standalone Activities, Schedule lifecycle)
 
 This release bumps the peer dependency range to `@temporalio/*` `^1.15.0 || ^1.19.0` and adds four feature areas: Workflow Update support, Async Activity Completion, Standalone Activities, and full schedule lifecycle management. See [Advanced Configuration](./advanced-configuration.md) for usage of all new APIs.

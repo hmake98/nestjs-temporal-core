@@ -50,6 +50,8 @@ NestJS Temporal Core bridges NestJS's dependency injection system with Temporal.
 
 - **Node.js**: >= 20.3.0 (required by `@temporalio/*` 1.19; if you're on Node 16/18, stay on `nestjs-temporal-core@<version>` pinned to `@temporalio/*` `^1.15.0`)
 - **NestJS**: 9, 10, 11 or 12
+  - NestJS 12 is ESM-only. This package ships CommonJS, so on NestJS 12 you need Node 20.19+ or 22.12+, where `require()` can load ES modules.
+  - The optional `nestjs-temporal-core/terminus` entry needs `@nestjs/terminus` 11 or 12.
 - **Temporal Server**: >= 1.20.0
 
 Continue to [Getting Started](./getting-started.md).
