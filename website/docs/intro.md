@@ -49,7 +49,7 @@ NestJS Temporal Core bridges NestJS's dependency injection system with Temporal.
 ## Requirements
 
 - **Node.js**: >= 20.3.0 (required by `@temporalio/*` 1.19; if you're on Node 16/18, stay on `nestjs-temporal-core@<version>` pinned to `@temporalio/*` `^1.15.0`)
-- **NestJS**: >= 9.0.0
+- **NestJS**: 9, 10, 11 or 12
 - **Temporal Server**: >= 1.20.0
 
 Continue to [Getting Started](./getting-started.md).

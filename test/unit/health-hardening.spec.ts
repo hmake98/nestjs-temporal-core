@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { HealthCheckError } from '@nestjs/terminus';
+import { HealthIndicatorService } from '@nestjs/terminus';
 import { TEMPORAL_HEALTH_OPTIONS } from '../../src/constants';
 import { TemporalHealthController } from '../../src/health/temporal-health.controller';
 import { TemporalHealthModule } from '../../src/health/temporal-health.module';
@@ -79,7 +79,11 @@ describe('TemporalHealthModule.register', () => {
 describe('TemporalHealthIndicator (Terminus)', () => {
     async function indicatorWith(service: unknown) {
         const ref = await Test.createTestingModule({
-            providers: [TemporalHealthIndicator, { provide: TemporalService, useValue: service }],
+            providers: [
+                TemporalHealthIndicator,
+                HealthIndicatorService,
+                { provide: TemporalService, useValue: service },
+            ],
         }).compile();
         return ref.get(TemporalHealthIndicator);
     }
@@ -98,17 +102,16 @@ describe('TemporalHealthIndicator (Terminus)', () => {
         expect(Object.keys(await indicator.isHealthy('workflows'))).toEqual(['workflows']);
     });
 
-    it.each(['degraded', 'unhealthy'])('throws HealthCheckError when %s', async (status) => {
+    it.each(['degraded', 'unhealthy'])('reports down when %s', async (status) => {
         const indicator = await indicatorWith(
             makeService({
                 getOverallHealth: jest.fn().mockResolvedValue({ status, timestamp: new Date() }),
             }),
         );
 
-        const error: any = await indicator.isHealthy().catch((e) => e);
-
-        expect(error).toBeInstanceOf(HealthCheckError);
-        expect(error.causes.temporal).toEqual({ status: 'down', state: status });
+        await expect(indicator.isHealthy()).resolves.toEqual({
+            temporal: { status: 'down', state: status },
+        });
     });
 
     it('treats a failing health lookup as down without leaking the error', async () => {
@@ -118,10 +121,10 @@ describe('TemporalHealthIndicator (Terminus)', () => {
             }),
         );
 
-        const error: any = await indicator.isHealthy().catch((e) => e);
+        const result = await indicator.isHealthy();
 
-        expect(error).toBeInstanceOf(HealthCheckError);
-        expect(JSON.stringify(error.causes)).not.toContain('password');
+        expect(result.temporal.status).toBe('down');
+        expect(JSON.stringify(result)).not.toContain('password');
     });
 
     it('requireWorker fails when no worker is running', async () => {
@@ -129,9 +132,11 @@ describe('TemporalHealthIndicator (Terminus)', () => {
             makeService({ isWorkerRunning: jest.fn().mockReturnValue(false) }),
         );
 
-        await expect(indicator.isHealthy('temporal')).resolves.toBeDefined();
+        await expect(indicator.isHealthy('temporal')).resolves.toMatchObject({
+            temporal: { status: 'up' },
+        });
         await expect(
             indicator.isHealthy('temporal', { requireWorker: true }),
-        ).rejects.toBeInstanceOf(HealthCheckError);
+        ).resolves.toMatchObject({ temporal: { status: 'down' } });
     });
 });
