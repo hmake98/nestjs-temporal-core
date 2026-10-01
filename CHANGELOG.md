@@ -4,6 +4,11 @@
 
 ### Changes
 
+- feat: `runtime` option installs the SDK `Runtime` once and early (idempotent, warns on late install) and can route SDK/Core logs to the Nest logger.
+- feat: `redact()` and `redactKeys`: credentials, TLS material and payload bodies are redacted in library logs.
+- feat: `correlation` option: correlation id propagated client -> workflow -> activity via `AsyncLocalStorage`; `runWithCorrelationId` / `getCorrelationId`; library logs are tagged with it.
+- feat: `nestjs-temporal-core/otel` entry: `createTemporalOpenTelemetry` and `prometheusTelemetry`. OpenTelemetry packages are optional peers.
+- docs: "Production Observability" page.
 - feat: `nestjs-temporal-core/testing` entry: `TemporalTestingModule` (fake `TemporalService` / `TemporalClientService` with call recording, configurable results and errors), `createActivityHarness` and `overrideActivity`. `@nestjs/testing` and `@temporalio/testing` are optional peer dependencies.
 - test: integration suites for signal, query, update, signalWithStart, cancel/terminate, schedule lifecycle and shutdown drain; consumer smoke test (`npm run test:smoke`) wired into CI.
 - docs: "Testing Your Temporal Code" page; worker-only guide now documents `shutdownGraceTime`.

@@ -16,6 +16,7 @@ export { Worker } from '@temporalio/worker';
 export type { Workflow, WorkflowResultType } from '@temporalio/workflow';
 
 import { Type } from '@nestjs/common';
+import type { TemporalRuntimeOptions, CorrelationOptions } from './observability/types';
 import {
     ScheduleClient,
     ScheduleHandle,
@@ -256,6 +257,18 @@ export interface WorkerDefinition {
 export interface TemporalOptions extends LoggerConfig {
     /** Connection config — see {@link ClientConnectionOptions}. */
     connection?: ClientConnectionOptions;
+    /**
+     * Process-wide SDK runtime: route SDK/Core logs to the Nest logger, configure metrics.
+     * Installed once, before the first client or worker; later calls are no-ops.
+     */
+    runtime?: TemporalRuntimeOptions;
+    /**
+     * Propagate a correlation id (`x-correlation-id`) from the client call through the
+     * workflow to every activity, and tag library logs with it. `true` uses defaults.
+     * Off by default. Not applied to prebuilt `workflowBundle`s (add
+     * `nestjs-temporal-core/dist/observability/workflow-interceptors` to the bundle).
+     */
+    correlation?: boolean | CorrelationOptions;
     taskQueue?: string;
     /** Single-worker config. Equivalent to `Omit<WorkerDefinition, 'taskQueue'>`. */
     worker?: Omit<WorkerDefinition, 'taskQueue'>;
@@ -402,6 +415,12 @@ export interface LoggerConfig {
      * @default false
      */
     muteErrors?: boolean;
+    /**
+     * Extra object keys whose values are replaced with `[REDACTED]` when the library
+     * logs structured data. Credentials, TLS material and payload bodies are always
+     * redacted; see `DEFAULT_REDACT_KEYS`. Matching ignores case, `-` and `_`.
+     */
+    redactKeys?: string[];
 }
 
 // ==========================================

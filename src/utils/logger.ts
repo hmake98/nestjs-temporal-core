@@ -1,5 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { LogLevel, LoggerConfig, GlobalLoggerConfig } from '../interfaces';
+import { getCorrelationId } from '../observability/correlation';
+import { redact } from './redact';
 
 /**
  * Optimized singleton logger manager with performance improvements.
@@ -94,7 +96,8 @@ export class TemporalLogger {
     );
 
     private readonly nestLogger: Logger;
-    private readonly config: Required<LoggerConfig>;
+    private readonly config: Required<Omit<LoggerConfig, 'redactKeys'>>;
+    private readonly redactKeys: readonly string[];
     private readonly context: string;
     private readonly currentLevelIndex: number;
 
@@ -105,6 +108,7 @@ export class TemporalLogger {
             config.logLevel && TemporalLogger.LEVEL_INDICES.has(config.logLevel)
                 ? config.logLevel
                 : 'info';
+        this.redactKeys = config.redactKeys ?? [];
         this.config = {
             enableLogger: config.enableLogger ?? true,
             logLevel,
@@ -124,19 +128,36 @@ export class TemporalLogger {
     }
 
     /**
+     * Prepare a message for output: structured values are redacted, and strings are tagged
+     * with the current correlation id when one is active.
+     */
+    private format(message: unknown): unknown {
+        if (message !== null && typeof message === 'object' && !(message instanceof Error)) {
+            message = redact(message, this.redactKeys);
+        }
+        const correlationId = getCorrelationId();
+        return correlationId && typeof message === 'string'
+            ? `${message} [correlationId=${correlationId}]`
+            : message;
+    }
+
+    /**
      * Optimized error logging with improved trace handling.
      * When `muteErrors` is enabled, error messages are downgraded to debug level.
      */
     error(message: unknown, trace?: string | Error, context?: string): void {
         if (this.config.muteErrors) {
             if (this.shouldLog('debug')) {
-                this.nestLogger.debug(`[muted error] ${message}`, context ?? this.context);
+                this.nestLogger.debug(
+                    `[muted error] ${this.format(message)}`,
+                    context ?? this.context,
+                );
             }
             return;
         }
         if (this.shouldLog('error')) {
             const stackTrace = trace instanceof Error ? trace.stack : trace;
-            this.nestLogger.error(message, stackTrace, context ?? this.context);
+            this.nestLogger.error(this.format(message), stackTrace, context ?? this.context);
         }
     }
 
@@ -145,7 +166,7 @@ export class TemporalLogger {
      */
     warn(message: unknown, context?: string): void {
         if (this.shouldLog('warn')) {
-            this.nestLogger.warn(message, context ?? this.context);
+            this.nestLogger.warn(this.format(message), context ?? this.context);
         }
     }
 
@@ -154,7 +175,7 @@ export class TemporalLogger {
      */
     log(message: unknown, context?: string): void {
         if (this.shouldLog('info')) {
-            this.nestLogger.log(message, context ?? this.context);
+            this.nestLogger.log(this.format(message), context ?? this.context);
         }
     }
 
@@ -170,7 +191,7 @@ export class TemporalLogger {
      */
     debug(message: unknown, context?: string): void {
         if (this.shouldLog('debug')) {
-            this.nestLogger.debug(message, context ?? this.context);
+            this.nestLogger.debug(this.format(message), context ?? this.context);
         }
     }
 
@@ -179,7 +200,7 @@ export class TemporalLogger {
      */
     verbose(message: unknown, context?: string): void {
         if (this.shouldLog('verbose')) {
-            this.nestLogger.verbose(message, context ?? this.context);
+            this.nestLogger.verbose(this.format(message), context ?? this.context);
         }
     }
 
@@ -225,7 +246,7 @@ export class TemporalLogger {
     /**
      * Get readonly logger configuration.
      */
-    getConfig(): Readonly<Required<LoggerConfig>> {
+    getConfig(): Readonly<Required<Omit<LoggerConfig, 'redactKeys'>>> {
         return this.config;
     }
 
@@ -283,7 +304,7 @@ export class LoggerUtils {
     static logServiceInit(logger: TemporalLogger, serviceName: string, config?: unknown): void {
         logger.log(`Initializing ${serviceName}...`);
         if (config && logger.getLogLevel() === 'debug') {
-            logger.debug(`${serviceName} configuration:`, JSON.stringify(config, null, 2));
+            logger.debug(`${serviceName} configuration:`, JSON.stringify(redact(config), null, 2));
         }
     }
 

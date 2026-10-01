@@ -5,8 +5,8 @@
  *
  *  1. Main entry loads with the optional peers (@nestjs/testing, @temporalio/testing)
  *     NOT installed, and never touches them.
- *  2. After installing the optional peers, the `/testing` subpath loads, works, and
- *     type-checks under classic `node10` module resolution.
+ *  2. After installing the optional peers, the `/testing` and `/otel` subpaths load, work,
+ *     and type-check under classic `node10` module resolution.
  *  3. Deep `dist/...` imports still resolve (no `exports` map in 3.x).
  *
  * Requires a prior `npm run build`. Run: `npm run test:smoke`.
@@ -75,7 +75,8 @@ Module._resolveFilename = function (request, ...rest) {
   return orig.call(this, request, ...rest);
 };
 const lib = require('nestjs-temporal-core');
-const leaked = loaded.filter((r) => r === '@temporalio/testing' || r === '@nestjs/testing');
+const optional = ['@temporalio/testing', '@nestjs/testing', '@temporalio/interceptors-opentelemetry', '@opentelemetry/api', '@opentelemetry/sdk-trace-base', '@opentelemetry/resources'];
+const leaked = loaded.filter((r) => optional.includes(r));
 if (leaked.length) throw new Error('main entry loaded optional peers: ' + leaked);
 for (const name of ['TemporalModule', 'TemporalService', 'TemporalClientError']) {
   if (!lib[name]) throw new Error('missing export ' + name);
@@ -96,6 +97,10 @@ console.log('main entry ok, deep import ok');
             '--legacy-peer-deps',
             `@nestjs/testing@${dev('@nestjs/testing')}`,
             `@temporalio/testing@${dev('@temporalio/testing')}`,
+            `@temporalio/interceptors-opentelemetry@${dev('@temporalio/interceptors-opentelemetry')}`,
+            `@opentelemetry/api@${dev('@opentelemetry/api')}`,
+            `@opentelemetry/resources@${dev('@opentelemetry/resources')}`,
+            `@opentelemetry/sdk-trace-base@${dev('@opentelemetry/sdk-trace-base')}`,
         ],
         app,
     );
@@ -119,13 +124,36 @@ const { TemporalTestingModule, TemporalTestingRecorder } = require('nestjs-tempo
     );
     run(process.execPath, ['testing-entry.js'], app);
 
-    step('/testing subpath type-checks (moduleResolution node10)');
+    step('/otel subpath works at runtime');
+    fs.writeFileSync(
+        path.join(app, 'otel-entry.js'),
+        `
+const { createTemporalOpenTelemetry, prometheusTelemetry } = require('nestjs-temporal-core/otel');
+const { Resource } = require('@opentelemetry/resources');
+const { SimpleSpanProcessor, InMemorySpanExporter } = require('@opentelemetry/sdk-trace-base');
+const otel = createTemporalOpenTelemetry({
+  resource: new Resource({ 'service.name': 'smoke' }),
+  spanProcessor: new SimpleSpanProcessor(new InMemorySpanExporter()),
+});
+if (otel.client.workflow.length !== 1) throw new Error('client interceptor missing');
+if (!otel.worker.sinks.exporter) throw new Error('span sink missing');
+if (!prometheusTelemetry('0.0.0.0:9464').metrics.prometheus) throw new Error('prometheus missing');
+console.log('/otel ok');
+`,
+    );
+    run(process.execPath, ['otel-entry.js'], app);
+
+    step('/testing and /otel subpaths type-check (moduleResolution node10)');
     fs.writeFileSync(
         path.join(app, 'types.ts'),
         `
 import { TemporalTestingModule, createActivityHarness } from 'nestjs-temporal-core/testing';
-import { TemporalService } from 'nestjs-temporal-core';
-export const probe = [TemporalTestingModule, createActivityHarness, TemporalService];
+import { createTemporalOpenTelemetry, prometheusTelemetry } from 'nestjs-temporal-core/otel';
+import { TemporalService, installRuntime, getCorrelationId, redact } from 'nestjs-temporal-core';
+export const probe = [
+  TemporalTestingModule, createActivityHarness, createTemporalOpenTelemetry, prometheusTelemetry,
+  TemporalService, installRuntime, getCorrelationId, redact,
+];
 `,
     );
     fs.writeFileSync(

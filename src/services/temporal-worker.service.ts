@@ -25,6 +25,8 @@ import {
     WorkerInstance,
 } from '../interfaces';
 import { TemporalDiscoveryService } from './temporal-discovery.service';
+import { withCorrelationWorkerOptions } from '../observability/apply';
+import { installRuntime } from '../observability/runtime';
 import { createLogger, TemporalLogger } from '../utils/logger';
 
 /**
@@ -277,7 +279,7 @@ export class TemporalWorkerManagerService
 
         // Create worker config
         const workerConfig: WorkerConfig = {
-            ...workerDef.workerOptions,
+            ...withCorrelationWorkerOptions(workerDef.workerOptions, this.options.correlation),
             taskQueue: workerDef.taskQueue,
             namespace: this.options.connection?.namespace || 'default',
             connection: this.connection!,
@@ -1011,6 +1013,8 @@ export class TemporalWorkerManagerService
      * Create connection to Temporal server
      */
     private async createConnection(): Promise<void> {
+        installRuntime(this.options.runtime);
+
         // If a valid connection was injected, use it
         if (this.injectedConnection) {
             this.connection = this.injectedConnection;
@@ -1188,7 +1192,10 @@ export class TemporalWorkerManagerService
         }
 
         const config: WorkerConfig = {
-            ...this.options.worker?.workerOptions,
+            ...withCorrelationWorkerOptions(
+                this.options.worker?.workerOptions,
+                this.options.correlation,
+            ),
             taskQueue,
             namespace,
             connection: this.connection,

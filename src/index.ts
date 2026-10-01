@@ -33,6 +33,9 @@ export { WorkflowProxyFactory, IWorkflowProxy, WorkflowProxy } from './workflow-
 /** Typed errors that preserve the original SDK error as `cause` */
 export * from './errors';
 
+/** Runtime install, correlation ids and their interceptors */
+export * from './observability';
+
 /** All utility functions (validation, metadata, logging) */
 export * from './utils';
 

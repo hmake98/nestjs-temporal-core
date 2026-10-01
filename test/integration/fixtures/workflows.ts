@@ -20,6 +20,14 @@ const { greet } = proxyActivities<GreetingActivities>({
     startToCloseTimeout: '10 seconds',
 });
 
+interface CorrelationActivities {
+    currentId(): Promise<string | undefined>;
+}
+
+const { currentId } = proxyActivities<CorrelationActivities>({
+    startToCloseTimeout: '10 seconds',
+});
+
 const { slowTask } = proxyActivities<SlowActivities>({
     startToCloseTimeout: '30 seconds',
 });
@@ -55,4 +63,9 @@ export async function counterWorkflow(): Promise<number> {
 
 export async function slowWorkflow(ms: number): Promise<string> {
     return slowTask(ms);
+}
+
+/** Returns whatever correlation id the activity sees. */
+export async function correlationWorkflow(): Promise<string | undefined> {
+    return currentId();
 }

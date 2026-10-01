@@ -11,6 +11,7 @@ const sidebars = {
     'testing',
     'worker-only-apps',
     'error-handling',
+    'observability',
     'health-monitoring',
     'troubleshooting',
     'migration-guide',

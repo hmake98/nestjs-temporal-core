@@ -24,3 +24,6 @@ export {
 
 // Workflow proxy token helpers
 export { createWorkflowToken, createWorkflowProvider } from './workflow-token';
+
+// Redaction helper for structured log data
+export { redact, REDACTED, DEFAULT_REDACT_KEYS } from './redact';

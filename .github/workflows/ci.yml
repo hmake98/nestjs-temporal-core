@@ -160,7 +160,7 @@ jobs:
           test -f dist/index.d.ts
 
       - name: Verify subpath stubs ship
-        run: test -f testing/package.json
+        run: test -f testing/package.json && test -f otel/package.json
 
       # Installs the packed tarball into a temp project: main entry without optional
       # peers, `/testing` subpath with them, node10 type resolution.
