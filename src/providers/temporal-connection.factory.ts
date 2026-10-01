@@ -4,6 +4,7 @@ import { NativeConnection } from '@temporalio/worker';
 import { TemporalOptions } from '../interfaces';
 import { withCorrelationClientInterceptors } from '../observability/apply';
 import { installRuntime } from '../observability/runtime';
+import { enforceConnectionSecurity } from '../security';
 import { createLogger, LoggerUtils, TemporalLogger } from '../utils/logger';
 
 /**
@@ -35,6 +36,7 @@ export class TemporalConnectionFactory implements OnModuleDestroy {
      */
     async createClient(options: TemporalOptions): Promise<Client | null> {
         installRuntime(options.runtime);
+        enforceConnectionSecurity(options);
         if (!options.connection) {
             this.logger.info('No connection configuration provided - running without client');
             return null;
@@ -62,6 +64,7 @@ export class TemporalConnectionFactory implements OnModuleDestroy {
      */
     async createWorkerConnection(options: TemporalOptions): Promise<NativeConnection | null> {
         installRuntime(options.runtime);
+        enforceConnectionSecurity(options);
         if (!options.connection) {
             this.logger.debug('No connection configuration provided for worker');
             return null;
@@ -189,8 +192,8 @@ export class TemporalConnectionFactory implements OnModuleDestroy {
                         options.correlation,
                     ),
                 }),
-                ...(options.connection!.dataConverter && {
-                    dataConverter: options.connection!.dataConverter,
+                ...((options.connection!.dataConverter ?? options.dataConverter) && {
+                    dataConverter: options.connection!.dataConverter ?? options.dataConverter,
                 }),
             });
 

@@ -1,4 +1,5 @@
 import type { ClientInterceptors } from '@temporalio/client';
+import type { DataConverter } from '@temporalio/common';
 import type { WorkerOptions } from '@temporalio/worker';
 import {
     createCorrelationActivityInterceptor,
@@ -67,4 +68,13 @@ export function withCorrelationWorkerOptions(
             ],
         },
     };
+}
+
+/** Default the worker's `dataConverter` to the module-level one; an explicit one wins. */
+export function withDataConverter(
+    workerOptions: Partial<WorkerOptions> | undefined,
+    dataConverter: DataConverter | undefined,
+): Partial<WorkerOptions> | undefined {
+    if (!dataConverter || workerOptions?.dataConverter) return workerOptions;
+    return { ...workerOptions, dataConverter };
 }

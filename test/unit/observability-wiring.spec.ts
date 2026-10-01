@@ -160,3 +160,51 @@ describe('logger redaction and correlation', () => {
         expect(printed).toContain('[REDACTED]');
     });
 });
+
+describe('security wiring', () => {
+    const dataConverter = { payloadCodecs: [] };
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        (Connection.lazy as jest.Mock).mockResolvedValue({});
+    });
+
+    it('applies the module-level dataConverter to the client', async () => {
+        await new TemporalConnectionFactory().createClient({
+            connection: { address: 'localhost:7233' },
+            dataConverter,
+        });
+
+        expect((Client as unknown as jest.Mock).mock.calls[0][0].dataConverter).toBe(dataConverter);
+    });
+
+    it('lets connection.dataConverter win over the module-level one', async () => {
+        const specific = { payloadCodecs: [] };
+
+        await new TemporalConnectionFactory().createClient({
+            connection: { address: 'localhost:7233', dataConverter: specific },
+            dataConverter,
+        });
+
+        expect((Client as unknown as jest.Mock).mock.calls[0][0].dataConverter).toBe(specific);
+    });
+
+    it('strictSecurity fails client creation for a plaintext remote connection', async () => {
+        await expect(
+            new TemporalConnectionFactory().createClient({
+                connection: { address: 'prod.example.com:7233' },
+                strictSecurity: true,
+            }),
+        ).rejects.toThrow(/strictSecurity/);
+        expect(Connection.lazy).not.toHaveBeenCalled();
+    });
+
+    it('strictSecurity also guards the worker connection', async () => {
+        await expect(
+            new TemporalConnectionFactory().createWorkerConnection({
+                connection: { address: 'prod.example.com:7233' },
+                strictSecurity: true,
+            }),
+        ).rejects.toThrow(/strictSecurity/);
+    });
+});

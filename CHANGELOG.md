@@ -4,6 +4,11 @@
 
 ### Changes
 
+- feat: `nestjs-temporal-core/encryption` entry: AES-256-GCM payload codec (`createEncryptionDataConverter`, `createStaticKeyProvider`, `AesGcmPayloadCodec`) with key ids for rotation, authenticated key id, plaintext pass-through for existing namespaces.
+- feat: module-level `dataConverter` option applied to both client and worker (specific `connection.dataConverter` / `workerOptions.dataConverter` still win).
+- feat: connection security checks: warn on plaintext connections to remote servers (with or without credentials); `strictSecurity: true` makes them startup errors.
+- feat: `TemporalHealthModule.register({ detail: 'minimal' })` and `nestjs-temporal-core/terminus` health indicator (`@nestjs/terminus` is an optional peer).
+- docs: "Security" page.
 - feat: `runtime` option installs the SDK `Runtime` once and early (idempotent, warns on late install) and can route SDK/Core logs to the Nest logger.
 - feat: `redact()` and `redactKeys`: credentials, TLS material and payload bodies are redacted in library logs.
 - feat: `correlation` option: correlation id propagated client -> workflow -> activity via `AsyncLocalStorage`; `runWithCorrelationId` / `getCorrelationId`; library logs are tagged with it.

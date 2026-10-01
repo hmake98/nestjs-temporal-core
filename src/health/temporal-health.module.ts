@@ -1,4 +1,6 @@
-import { Module } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common';
+import { TEMPORAL_HEALTH_OPTIONS } from '../constants';
+import { TemporalHealthOptions } from '../interfaces';
 import { TemporalHealthController } from './temporal-health.controller';
 
 /**
@@ -27,4 +29,19 @@ import { TemporalHealthController } from './temporal-health.controller';
 @Module({
     controllers: [TemporalHealthController],
 })
-export class TemporalHealthModule {}
+export class TemporalHealthModule {
+    /**
+     * Configure the endpoint. `detail: 'minimal'` exposes only `{ status, timestamp }`.
+     *
+     * @example
+     * ```typescript
+     * TemporalHealthModule.register({ detail: 'minimal' })
+     * ```
+     */
+    static register(options: TemporalHealthOptions = {}): DynamicModule {
+        return {
+            module: TemporalHealthModule,
+            providers: [{ provide: TEMPORAL_HEALTH_OPTIONS, useValue: options }],
+        };
+    }
+}

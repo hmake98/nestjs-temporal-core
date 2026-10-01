@@ -1,6 +1,7 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Inject, Optional } from '@nestjs/common';
 import { TemporalService } from '../services/temporal.service';
-import { HealthResponse } from '../interfaces';
+import { TEMPORAL_HEALTH_OPTIONS } from '../constants';
+import { HealthResponse, MinimalHealthResponse, TemporalHealthOptions } from '../interfaces';
 
 /**
  * Health check controller for Temporal components
@@ -10,7 +11,12 @@ import { HealthResponse } from '../interfaces';
  */
 @Controller('temporal/health')
 export class TemporalHealthController {
-    constructor(private readonly temporalService: TemporalService) {}
+    constructor(
+        private readonly temporalService: TemporalService,
+        @Optional()
+        @Inject(TEMPORAL_HEALTH_OPTIONS)
+        private readonly healthOptions?: TemporalHealthOptions,
+    ) {}
 
     /**
      * Get comprehensive system health status
@@ -27,8 +33,16 @@ export class TemporalHealthController {
      * @returns Promise<HealthResponse> Comprehensive health status
      */
     @Get()
-    async getHealth(): Promise<HealthResponse> {
+    async getHealth(): Promise<HealthResponse | MinimalHealthResponse> {
         const overallHealth = await this.temporalService.getOverallHealth();
+
+        if (this.healthOptions?.detail === 'minimal') {
+            return {
+                status: overallHealth.status,
+                timestamp: overallHealth.timestamp.toISOString(),
+            };
+        }
+
         const serviceStats = this.temporalService.getStats();
         const workerStatus = this.temporalService.getWorkerStatus();
 
