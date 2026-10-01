@@ -101,7 +101,7 @@ check() {
 }
 ```
 
-Unhealthy states return a `down` result, so Terminus responds with 503. Requires `@nestjs/terminus` 11 or 12. A failure while checking is reported as down without exposing the error text.
+Unhealthy states return a `down` result, so Terminus responds with 503. Requires `@nestjs/terminus` 11 or 12. Earlier versions of this indicator threw `HealthCheckError`, which `@nestjs/terminus` 12 no longer provides. A failure while checking is reported as down without exposing the error text.
 
 ## Logs
 

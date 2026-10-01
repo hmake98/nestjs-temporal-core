@@ -11,6 +11,20 @@ npm install --save-dev @nestjs/testing @temporalio/testing
 
 Both are optional peer dependencies. `TemporalTestingModule` only needs `@nestjs/testing`; `createActivityHarness` also needs `@temporalio/testing`.
 
+## Testing with NestJS 12
+
+NestJS 12 is ESM-only. Jest 30 loads it through `require(esm)`, which works only on Node 24.9+ with the VM modules flag:
+
+```json
+{
+  "scripts": {
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+  }
+}
+```
+
+On Node 20 or 22, Jest cannot load NestJS 12. Either test against NestJS 11 there, or move your tests to Node 24. Vitest handles ESM natively and needs no flag. This repository's own CI follows the same split: NestJS 12 on Node 24, NestJS 11 on Node 20, 22 and 24.
+
 ## Test a service that starts a workflow
 
 Import `TemporalTestingModule` instead of `TemporalModule`. Code that injects `TemporalService` or `TemporalClientService` gets a fake that records every call and returns a successful default.

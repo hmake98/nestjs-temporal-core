@@ -104,6 +104,16 @@ await temporal.startWorkflow('myWorkflow', [args], {
 });
 ```
 
+### 5. `Must use import to load ES Module` in Jest (NestJS 12)
+
+NestJS 12 is ESM-only, and Jest cannot `require()` it by default.
+
+```
+Must use import to load ES Module: node_modules/@nestjs/common/...
+```
+
+Run Jest on Node 24.9+ with `node --experimental-vm-modules node_modules/jest/bin/jest.js`, or stay on NestJS 11 for Node 20/22. At runtime (not under Jest), your app needs Node 20.19+ or 22.12+. See [Testing with NestJS 12](./testing.md#testing-with-nestjs-12).
+
 ## Debug Mode
 
 Enable comprehensive debugging:
