@@ -182,3 +182,27 @@ describe('apply helpers', () => {
         });
     });
 });
+
+describe('withDataConverter', () => {
+    const { withDataConverter } = require('../../src/observability/apply');
+
+    it('is a no-op without a module-level converter', () => {
+        const options = { maxCachedWorkflows: 1 };
+        expect(withDataConverter(options, undefined)).toBe(options);
+    });
+
+    it('defaults the worker converter', () => {
+        const converter = { payloadCodecs: [] };
+        expect(withDataConverter({ maxCachedWorkflows: 1 }, converter)).toEqual({
+            maxCachedWorkflows: 1,
+            dataConverter: converter,
+        });
+        expect(withDataConverter(undefined, converter)).toEqual({ dataConverter: converter });
+    });
+
+    it('keeps an explicit worker converter', () => {
+        const mine = { payloadCodecs: [] };
+        const options = { dataConverter: mine };
+        expect(withDataConverter(options, { payloadCodecs: [] })).toBe(options);
+    });
+});

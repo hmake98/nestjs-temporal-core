@@ -269,6 +269,19 @@ export interface TemporalOptions extends LoggerConfig {
      * `nestjs-temporal-core/dist/observability/workflow-interceptors` to the bundle).
      */
     correlation?: boolean | CorrelationOptions;
+    /**
+     * One `DataConverter` applied to both the client and the worker, so they always agree
+     * (for example payload encryption from `nestjs-temporal-core/encryption`). A
+     * `connection.dataConverter` or `worker.workerOptions.dataConverter` still wins for its side.
+     * A custom payload *converter* running inside workflows also needs the bundler's
+     * `payloadConverterPath`; payload *codecs* do not.
+     */
+    dataConverter?: DataConverter;
+    /**
+     * Turn security warnings (plaintext connection to a remote server, credentials without
+     * TLS) into startup errors. Default `false`: warnings only.
+     */
+    strictSecurity?: boolean;
     taskQueue?: string;
     /** Single-worker config. Equivalent to `Omit<WorkerDefinition, 'taskQueue'>`. */
     worker?: Omit<WorkerDefinition, 'taskQueue'>;
@@ -1962,6 +1975,26 @@ export interface ServiceShutdownResult {
         client: boolean;
         schedule: boolean;
     };
+}
+
+/**
+ * Options for `TemporalHealthModule.register()`.
+ */
+export interface TemporalHealthOptions {
+    /**
+     * `'full'` (default) returns component counts, worker state and uptime.
+     * `'minimal'` returns only `{ status, timestamp }`, for endpoints reachable by
+     * untrusted callers (load balancer probes, public ingress).
+     */
+    detail?: 'full' | 'minimal';
+}
+
+/**
+ * Health response returned when `detail: 'minimal'`.
+ */
+export interface MinimalHealthResponse {
+    status: 'healthy' | 'degraded' | 'unhealthy';
+    timestamp: string;
 }
 
 /**

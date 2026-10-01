@@ -33,6 +33,9 @@ export { WorkflowProxyFactory, IWorkflowProxy, WorkflowProxy } from './workflow-
 /** Typed errors that preserve the original SDK error as `cause` */
 export * from './errors';
 
+/** Connection security checks (used by `strictSecurity`) */
+export * from './security';
+
 /** Runtime install, correlation ids and their interceptors */
 export * from './observability';
 
@@ -55,6 +58,7 @@ export {
     WORKFLOW_PARAMS_METADATA,
     TEMPORAL_CLIENT,
     TEMPORAL_MODULE_OPTIONS,
+    TEMPORAL_HEALTH_OPTIONS,
     TEMPORAL_CONNECTION,
     TIMEOUTS,
     RETRY_POLICIES,

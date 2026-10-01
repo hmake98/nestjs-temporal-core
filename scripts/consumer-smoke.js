@@ -5,7 +5,8 @@
  *
  *  1. Main entry loads with the optional peers (@nestjs/testing, @temporalio/testing)
  *     NOT installed, and never touches them.
- *  2. After installing the optional peers, the `/testing` and `/otel` subpaths load, work,
+ *  2. After installing the optional peers, the `/testing`, `/otel`, `/encryption` and
+ *     `/terminus` subpaths load, work,
  *     and type-check under classic `node10` module resolution.
  *  3. Deep `dist/...` imports still resolve (no `exports` map in 3.x).
  *
@@ -75,7 +76,7 @@ Module._resolveFilename = function (request, ...rest) {
   return orig.call(this, request, ...rest);
 };
 const lib = require('nestjs-temporal-core');
-const optional = ['@temporalio/testing', '@nestjs/testing', '@temporalio/interceptors-opentelemetry', '@opentelemetry/api', '@opentelemetry/sdk-trace-base', '@opentelemetry/resources'];
+const optional = ['@temporalio/testing', '@nestjs/testing', '@temporalio/interceptors-opentelemetry', '@opentelemetry/api', '@opentelemetry/sdk-trace-base', '@opentelemetry/resources', '@nestjs/terminus'];
 const leaked = loaded.filter((r) => optional.includes(r));
 if (leaked.length) throw new Error('main entry loaded optional peers: ' + leaked);
 for (const name of ['TemporalModule', 'TemporalService', 'TemporalClientError']) {
@@ -101,6 +102,7 @@ console.log('main entry ok, deep import ok');
             `@opentelemetry/api@${dev('@opentelemetry/api')}`,
             `@opentelemetry/resources@${dev('@opentelemetry/resources')}`,
             `@opentelemetry/sdk-trace-base@${dev('@opentelemetry/sdk-trace-base')}`,
+            `@nestjs/terminus@${dev('@nestjs/terminus')}`,
         ],
         app,
     );
@@ -143,15 +145,41 @@ console.log('/otel ok');
     );
     run(process.execPath, ['otel-entry.js'], app);
 
+    step('/encryption and /terminus subpaths work at runtime');
+    fs.writeFileSync(
+        path.join(app, 'security-entry.js'),
+        `
+const { randomBytes } = require('crypto');
+const { createEncryptionDataConverter, createStaticKeyProvider } = require('nestjs-temporal-core/encryption');
+const { TemporalHealthIndicator } = require('nestjs-temporal-core/terminus');
+(async () => {
+  const converter = createEncryptionDataConverter(
+    createStaticKeyProvider({ currentKeyId: 'v1', keys: { v1: randomBytes(32) } }),
+  );
+  const [codec] = converter.payloadCodecs;
+  const input = { metadata: { encoding: Buffer.from('json/plain') }, data: Buffer.from('"hi"') };
+  const [enc] = await codec.encode([input]);
+  const [dec] = await codec.decode([enc]);
+  if (Buffer.from(dec.data).toString() !== '"hi"') throw new Error('round trip failed');
+  if (typeof TemporalHealthIndicator !== 'function') throw new Error('indicator missing');
+  console.log('/encryption and /terminus ok');
+})().catch((e) => { console.error(e); process.exit(1); });
+`,
+    );
+    run(process.execPath, ['security-entry.js'], app);
+
     step('/testing and /otel subpaths type-check (moduleResolution node10)');
     fs.writeFileSync(
         path.join(app, 'types.ts'),
         `
 import { TemporalTestingModule, createActivityHarness } from 'nestjs-temporal-core/testing';
 import { createTemporalOpenTelemetry, prometheusTelemetry } from 'nestjs-temporal-core/otel';
+import { createEncryptionDataConverter, createStaticKeyProvider } from 'nestjs-temporal-core/encryption';
+import { TemporalHealthIndicator } from 'nestjs-temporal-core/terminus';
 import { TemporalService, installRuntime, getCorrelationId, redact } from 'nestjs-temporal-core';
 export const probe = [
   TemporalTestingModule, createActivityHarness, createTemporalOpenTelemetry, prometheusTelemetry,
+  createEncryptionDataConverter, createStaticKeyProvider, TemporalHealthIndicator,
   TemporalService, installRuntime, getCorrelationId, redact,
 ];
 `,
