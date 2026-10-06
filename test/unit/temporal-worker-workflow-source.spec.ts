@@ -41,7 +41,10 @@ describe('TemporalWorkerManagerService workflow source (autoBundle / path resolu
         });
 
         expect(result).toBe(true);
-        expect(buildWorkflowBundle).toHaveBeenCalledWith(file, { cacheDir: 'c' });
+        expect(buildWorkflowBundle).toHaveBeenCalledWith(file, {
+            cacheDir: 'c',
+            bundlerOptions: { workflowInterceptorModules: [] },
+        });
         expect(config).toEqual({ workflowBundle: { code: 'CODE' } });
     });
 
@@ -50,10 +53,38 @@ describe('TemporalWorkerManagerService workflow source (autoBundle / path resolu
         fs.writeFileSync(file, '');
         buildWorkflowBundle.mockResolvedValue({ code: 'C', hash: 'b'.repeat(40), cached: true });
         await service.applyWorkflowSource({}, { workflowsPath: file, autoBundle: true });
-        expect(buildWorkflowBundle).toHaveBeenCalledWith(file, {});
+        expect(buildWorkflowBundle).toHaveBeenCalledWith(file, {
+            bundlerOptions: { workflowInterceptorModules: [] },
+        });
         expect(service.logger.info).toHaveBeenCalledWith(
             expect.stringContaining('loaded from cache'),
         );
+    });
+
+    it('autoBundle: moves worker interceptor modules into the bundle (SDK ignores them with a bundle)', async () => {
+        const file = path.join(dir, 'w.ts');
+        fs.writeFileSync(file, '');
+        buildWorkflowBundle.mockResolvedValue({ code: 'C', hash: 'c'.repeat(40), cached: false });
+        const config: any = {
+            interceptors: {
+                activity: ['a'],
+                workflowModules: ['/mods/correlation.js', '/mods/dup.js'],
+            },
+        };
+
+        await service.applyWorkflowSource(config, {
+            workflowsPath: file,
+            autoBundle: {
+                bundlerOptions: { workflowInterceptorModules: ['/mods/dup.js', '/mods/own.js'] },
+            },
+        });
+
+        expect(
+            buildWorkflowBundle.mock.calls[0][1].bundlerOptions.workflowInterceptorModules,
+        ).toEqual(['/mods/dup.js', '/mods/own.js', '/mods/correlation.js']);
+        // Left on the worker options the SDK would warn and ignore them.
+        expect(config.interceptors.workflowModules).toBeUndefined();
+        expect(config.interceptors.activity).toEqual(['a']);
     });
 
     it('autoBundle: a missing path is a hard error', async () => {

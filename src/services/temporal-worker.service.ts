@@ -1305,7 +1305,26 @@ export class TemporalWorkerManagerService
             let workflowsPath = source.workflowsPath;
             if (source.autoBundle) {
                 workflowsPath = resolveWorkflowsPath(source.workflowsPath);
-                const autoBundleOptions = source.autoBundle === true ? {} : source.autoBundle;
+                const given = source.autoBundle === true ? {} : source.autoBundle;
+                // The SDK ignores `interceptors.workflowModules` once a prebuilt bundle is set,
+                // so modules added for the worker (for example correlation) are baked into the
+                // bundle here instead.
+                const workflowModules = config.interceptors?.workflowModules ?? [];
+                const autoBundleOptions = {
+                    ...given,
+                    bundlerOptions: {
+                        ...given.bundlerOptions,
+                        workflowInterceptorModules: [
+                            ...new Set([
+                                ...(given.bundlerOptions?.workflowInterceptorModules ?? []),
+                                ...workflowModules,
+                            ]),
+                        ],
+                    },
+                };
+                if (config.interceptors?.workflowModules) {
+                    config.interceptors = { ...config.interceptors, workflowModules: undefined };
+                }
                 const bundle = await buildWorkflowBundle(workflowsPath, autoBundleOptions);
                 config.workflowBundle = { code: bundle.code };
                 this.logger.info(

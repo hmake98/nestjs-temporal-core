@@ -1,7 +1,8 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { TemporalService } from '../../src';
+import { runWithCorrelationId, TemporalService } from '../../src';
+import { CorrelationActivities } from './fixtures/correlation.activities';
 import { GreetingActivities } from './fixtures/greeting.activities';
 import { createTestEnv, IntegrationEnv, WORKFLOWS_PATH } from './helpers/test-env';
 
@@ -66,5 +67,29 @@ describe('integration: autoBundle', () => {
                 },
             }),
         ).rejects.toThrow(/was not found/);
+    });
+
+    it('keeps the workflow-side correlation interceptor (baked into the bundle)', async () => {
+        ctx = await createTestEnv({
+            activityClasses: [CorrelationActivities],
+            options: {
+                correlation: true,
+                worker: {
+                    workflowsPath: WORKFLOWS_PATH,
+                    autoBundle: { cacheDir },
+                    activityClasses: [CorrelationActivities],
+                    autoStart: true,
+                },
+            },
+        });
+        const started = await runWithCorrelationId('req-42', () =>
+            ctx!.app
+                .get(TemporalService)
+                .startWorkflow<{ result: () => Promise<string> }>('correlationWorkflow', [], {
+                    taskQueue: ctx!.taskQueue,
+                    workflowId: `autobundle-corr-${Date.now()}`,
+                }),
+        );
+        await expect(started.result?.result()).resolves.toBe('req-42');
     });
 });
