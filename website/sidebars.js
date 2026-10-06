@@ -12,6 +12,7 @@ const sidebars = {
     'worker-only-apps',
     'error-handling',
     'observability',
+    'bundling',
     'security',
     'health-monitoring',
     'troubleshooting',

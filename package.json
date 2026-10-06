@@ -46,6 +46,7 @@
     "release:dry": "npm run build && npm publish --dry-run",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage --passWithNoTests --forceExit",
     "test:unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --testPathPatterns=test/unit --testPathIgnorePatterns=test/performance --coverage --passWithNoTests --forceExit",
+    "test:e2e": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config test/e2e/jest.config.js --runInBand --forceExit",
     "test:smoke": "node scripts/consumer-smoke.js",
     "test:integration": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config test/integration/jest.config.js --runInBand --forceExit",
     "test:ci": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage --passWithNoTests --forceExit",

@@ -45,8 +45,13 @@ module.exports = {
             statements: 90,
         },
     },
-    // Integration suites need a Temporal dev server; run via `npm run test:integration`.
-    testPathIgnorePatterns: ['/node_modules/', '<rootDir>/test/integration/'],
+    // Integration and e2e suites need a Temporal dev server; run via `npm run test:integration` / `test:e2e`.
+    testPathIgnorePatterns: [
+        '/node_modules/',
+        '<rootDir>/test/integration/',
+        '<rootDir>/test/e2e/',
+    ],
+    coveragePathIgnorePatterns: ['/node_modules/', '<rootDir>/website/'],
     moduleFileExtensions: ['ts', 'js', 'json'],
     setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
     testTimeout: 5000,

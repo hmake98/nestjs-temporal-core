@@ -12,6 +12,7 @@ coverage:
   ignore:
     - 'dist/'
     - 'docs/'
+    - 'website/'
     - 'node_modules/'
     - 'coverage/'
     - '*.config.*'
@@ -19,6 +20,10 @@ coverage:
     - '**/*.spec.ts'
     - '**/*.test.ts'
     - '**/*.d.ts'
+
+# Codecov reads the top-level `ignore` key; keep website/ (Docusaurus) out of reports.
+ignore:
+  - 'website/'
 
 comment:
   # Sections rendered in the bot comment, in order.

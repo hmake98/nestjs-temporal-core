@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./.build",
+    "rootDir": "../..",
+    "incremental": false,
+    "declaration": false,
+    "sourceMap": false,
+    "types": ["node"]
+  },
+  "include": ["../../src/**/*.ts", "./fixture/**/*.ts"],
+  "exclude": ["../../node_modules", "../../dist", "./.build"]
+}

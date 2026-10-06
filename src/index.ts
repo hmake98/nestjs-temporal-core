@@ -36,6 +36,9 @@ export * from './errors';
 /** Connection security checks (used by `strictSecurity`) */
 export * from './security';
 
+/** Workflow path resolution and cached bundling */
+export * from './workflow-bundle';
+
 /** Runtime install, correlation ids and their interceptors */
 export * from './observability';
 
