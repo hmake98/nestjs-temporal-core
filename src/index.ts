@@ -36,6 +36,9 @@ export * from './errors';
 /** Connection security checks (used by `strictSecurity`) */
 export * from './security';
 
+/** `@NonRetryable()` and opt-in activity error mapping */
+export * from './error-mapping';
+
 /** Workflow path resolution and cached bundling */
 export * from './workflow-bundle';
 
@@ -58,6 +61,7 @@ export {
     TEMPORAL_SIGNAL_METHOD,
     TEMPORAL_QUERY_METHOD,
     TEMPORAL_UPDATE_METHOD,
+    TEMPORAL_NON_RETRYABLE,
     WORKFLOW_PARAMS_METADATA,
     TEMPORAL_CLIENT,
     TEMPORAL_MODULE_OPTIONS,

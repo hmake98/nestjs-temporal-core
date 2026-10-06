@@ -28,6 +28,7 @@ import { TemporalDiscoveryService } from './temporal-discovery.service';
 import { withCorrelationWorkerOptions, withDataConverter } from '../observability/apply';
 import { installRuntime } from '../observability/runtime';
 import { enforceConnectionSecurity } from '../security';
+import { wrapActivities } from '../error-mapping';
 import {
     buildWorkflowBundle,
     resolveWorkflowsPath,
@@ -293,7 +294,7 @@ export class TemporalWorkerManagerService
             taskQueue: workerDef.taskQueue,
             namespace: this.options.connection?.namespace || 'default',
             connection: this.connection!,
-            activities: Object.fromEntries(activities),
+            activities: wrapActivities(Object.fromEntries(activities), this.options.errorMapping),
         };
 
         // Add workflow configuration
@@ -1207,7 +1208,10 @@ export class TemporalWorkerManagerService
             taskQueue,
             namespace,
             connection: this.connection,
-            activities: Object.fromEntries(this.activities),
+            activities: wrapActivities(
+                Object.fromEntries(this.activities),
+                this.options.errorMapping,
+            ),
         };
 
         // Add workflow configuration

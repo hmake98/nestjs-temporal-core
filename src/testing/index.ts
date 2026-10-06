@@ -11,3 +11,16 @@ export {
     ActivityHarness,
     ActivityHarnessOptions,
 } from './activity-testing';
+export {
+    replayHistories,
+    assertReplays,
+    readHistoryFile,
+    ReplayFailedError,
+    ReplayHistory,
+    ReplayOutcome,
+} from './replay';
+export {
+    TemporalTestEnvironment,
+    TemporalTestEnvironmentOptions,
+    CreateAppOptions,
+} from './test-environment';

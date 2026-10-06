@@ -17,6 +17,7 @@ export type { Workflow, WorkflowResultType } from '@temporalio/workflow';
 
 import { Type } from '@nestjs/common';
 import type { TemporalRuntimeOptions, CorrelationOptions } from './observability/types';
+import type { ErrorMappingOptions } from './error-mapping/types';
 import {
     ScheduleClient,
     ScheduleHandle,
@@ -311,6 +312,12 @@ export interface TemporalOptions extends LoggerConfig {
      */
     strictSecurity?: boolean;
     taskQueue?: string;
+    /**
+     * Map errors thrown by activities to retryable or non-retryable failures: `@NonRetryable()`,
+     * a custom `mapper`, and by default Nest `HttpException` 4xx (except 408/429) as final.
+     * Off by default: with it off, activity handlers reach the SDK untouched.
+     */
+    errorMapping?: boolean | ErrorMappingOptions;
     /** Single-worker config. Equivalent to `Omit<WorkerDefinition, 'taskQueue'>`. */
     worker?: Omit<WorkerDefinition, 'taskQueue'>;
     workers?: WorkerDefinition[];
