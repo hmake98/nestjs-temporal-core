@@ -60,7 +60,7 @@ Each folder (`decorators/`, `utils/`, `workflow-proxy/`) and `src/` itself re-ex
 
 - `peerDependencies`: `@nestjs/{common,core}` `^9 || ^10 || ^11 || ^12` (NestJS 12 is ESM-only; Jest tests against it need Node 24.9+ and `--experimental-vm-modules`, so CI runs NestJS 11 on Node 20/22 and NestJS 12 on Node 24), `@temporalio/{client,common,worker,workflow}` `^1.15.0 || ^1.19.0`, `reflect-metadata`, `rxjs`. Widening either range is a deliberate compatibility decision — verify against the SDK/NestJS versions actually supported, don't bump casually.
 - `devDependencies` pin the toolchain used to build/lint/test the package itself (not shipped) — keep `typescript` on a stable line compatible with `@typescript-eslint`'s peer range; don't blindly accept `npm-check-updates` bumps into a prerelease major (see the `typescript ^7.0.2` ERESOLVE incident on this repo).
-- `files` whitelist controls what actually ships (`dist/**/*`, `LICENSE`, `README.md`, `CHANGELOG.md`, `docs/README.md`, `jsdoc.json`) — new shipped assets must be added here.
+- `files` whitelist controls what actually ships (`dist/**/*`, `LICENSE`, `README.md`, `CHANGELOG.md`, `llms.txt`, plus the subpath stubs) — new shipped assets must be added here.
 - Version/release flow: `npm version` runs `fix-all` (format+lint) then stages `src`; `postversion` pushes commits+tags; `release`/`release:dry` build then `npm publish`. `.github/workflows/release.yml` automates this on tag push — keep its package name/URLs in sync with `package.json` (`name`, `homepage`).
 
 ## Subagents (`.claude/agents/`)

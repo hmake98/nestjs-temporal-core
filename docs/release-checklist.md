@@ -7,7 +7,7 @@ Releases are cut by the `Release` workflow (`.github/workflows/release.yml`, man
 1. `main` is green on CI (lint, test on Node 20/22/24, build, audit, integration).
 2. Every merged PR since the last tag is reflected in `CHANGELOG.md`. Add a `## [x.y.z] - YYYY-MM-DD` section at the top (newest first), one line per user-visible change with the short commit hash.
 3. Choose the bump. Rule for 3.x: no breaking changes, so `patch` (fixes, docs) or `minor` (additive features). Anything breaking waits for v4.
-4. `npm run release:dry` locally and check the `files` list in the output (`dist/**/*`, `LICENSE`, `README.md`, `CHANGELOG.md`, `jsdoc.json`, plus any new subpath stubs).
+4. `npm run release:dry` locally and check the `files` list in the output (`dist/**/*`, `LICENSE`, `README.md`, `CHANGELOG.md`, `llms.txt`, plus any new subpath stubs).
 5. `peerDependencies` ranges unchanged unless the release is deliberately widening or narrowing compatibility.
 
 ## Run
