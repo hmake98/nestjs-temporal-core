@@ -34,9 +34,9 @@ const FeatureList = [
     description: 'Connection pooling, multi-worker support, graceful shutdown, and TLS for Temporal Cloud.',
   },
   {
-    emoji: '🤖',
-    title: 'MCP Server',
-    description: 'Expose workflow and schedule operations to MCP-aware clients like Claude Code and Claude Desktop over stdio.',
+    emoji: '🧪',
+    title: 'Testing Utilities',
+    description: 'Fakes for unit tests, an activity harness, a time-skipping test environment and history replay under nestjs-temporal-core/testing.',
   },
 ];
 

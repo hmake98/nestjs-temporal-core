@@ -74,7 +74,7 @@ worker: {
 },
 ```
 
-Also call `app.enableShutdownHooks()`; without it the process exits immediately and Temporal retries the interrupted activities after their timeouts. `shutdownTimeout` (default 30 s) bounds how long the application waits for the shutdown before moving on.
+Also call `app.enableShutdownHooks()`; without it the process exits immediately and Temporal retries the interrupted activities after their timeouts. The module-level `shutdownTimeout` option (milliseconds, default `30000`) bounds how long the application waits for the shutdown before moving on.
 
 ## Starting workflows from a worker-only app
 

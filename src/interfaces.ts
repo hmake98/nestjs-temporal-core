@@ -328,9 +328,9 @@ export interface TemporalOptions extends LoggerConfig {
     isGlobal?: boolean;
     allowConnectionFailure?: boolean;
     /**
-     * Enable NestJS shutdown hooks to properly handle SIGTERM/SIGINT signals.
-     * When enabled, the module will register shutdown hooks to ensure graceful worker termination.
-     * @default true
+     * Not read by the module today. Call `app.enableShutdownHooks()` in `main.ts` so Nest
+     * delivers SIGTERM/SIGINT to the worker's shutdown hooks.
+     * @deprecated Has no effect.
      */
     enableShutdownHooks?: boolean;
     /**

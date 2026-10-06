@@ -90,12 +90,12 @@ export async function orderWorkflow(orderId: string, cents: number): Promise<str
 **Start, signal, query from a service:**
 
 ```typescript
-const started = await this.temporal.startWorkflow<{ workflowId: string }>('orderWorkflow', [id, cents], {
+await this.temporal.startWorkflow('orderWorkflow', [id, cents], {
   taskQueue: 'orders',
   workflowId: `order-${id}`,          // use a business key so retries do not double-start
 });
 await this.temporal.signalWorkflow(`order-${id}`, 'cancel');
-const status = await this.temporal.queryWorkflow<string>(`order-${id}`, 'status');
+const { result: status } = await this.temporal.queryWorkflow<string>(`order-${id}`, 'status');
 ```
 
 `startWorkflow`, `signalWorkflow`, `queryWorkflow`, `cancelWorkflow` and `terminateWorkflow` live on `TemporalService`. Failures throw `TemporalClientError` with the SDK error as `.cause`.
@@ -121,7 +121,7 @@ Activities: `createActivityHarness(OrdersActivities, { providers })`. Real workf
 | `Cannot find module` / webpack error at worker start | Wrong `workflowsPath`, or running from `dist/` with a `src/` path | Use `path.join(__dirname, '...')` with no extension; `.ts`/`.js` are swapped for you |
 | Worker starts but workflow never runs | `taskQueue` differs between worker and the `startWorkflow` call | Use the same string; check `worker.taskQueue` in logs |
 | `Nondeterminism error` / `DeterminismViolationError` | Workflow code changed under running executions, or uses `Date.now()`, `Math.random()`, `setTimeout`, I/O | Move non-determinism to an activity; use `patched()` for edits; verify with `assertReplays` |
-| `Importing ... from @nestjs/common in workflow` sandbox errors | A workflow file imports `nestjs-temporal-core`, a service, or an activity value | Workflows import only `@temporalio/workflow`; use `import type` for activities |
+| `Your Workflow code (or a library it imported) is importing the following disallowed modules` | A workflow file imports `nestjs-temporal-core`, a service, or an activity value | Workflows import only `@temporalio/workflow`; use `import type` for activities |
 | Activity retries forever on a bad request | Every error is retryable by default | `errorMapping: true` and `@NonRetryable()`; see [Error handling](./error-handling) |
 | `WorkflowExecutionAlreadyStartedError` | Same `workflowId` started twice | Intended: catch it, or set an id conflict policy |
 | Shutdown hangs or drops tasks | Missing `app.enableShutdownHooks()` | Call it in `main.ts` |

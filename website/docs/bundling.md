@@ -33,7 +33,7 @@ TemporalModule.register({
 
 `workflowsPath` is checked at startup:
 
-- Relative paths resolve against `process.cwd()`.
+- Paths starting with `.` (and absolute paths) resolve against `process.cwd()`. A bare string such as `src/workflows` is treated as a package specifier and passed to the SDK untouched, so start relative paths with `./`.
 - A path without an extension is tried as `.ts`, `.js`, `.mjs`, `.cjs`, then as a directory with an `index` file.
 - **`.ts` and `.js` are swapped** when only the other exists. `src/workflows.ts` still works from `dist/`, and `dist/workflows.js` still works under ts-node. Build with `nest build`, run from `dist/`, and the same line works.
 - A missing path fails with the paths that were tried. With `autoBundle` this is a startup error. Without it, it is logged as a warning and the SDK reports its own error, so existing apps behave as before.
@@ -70,7 +70,11 @@ Build the bundle in CI and ship the file:
 import { bundleWorkflowCode } from '@temporalio/worker';
 import { writeFile } from 'fs/promises';
 
-const { code } = await bundleWorkflowCode({ workflowsPath: require.resolve('../src/workflows') });
+const { code } = await bundleWorkflowCode({
+  workflowsPath: require.resolve('../src/workflows'),
+  // only if you enabled `correlation` or OpenTelemetry (see the note below)
+  workflowInterceptorModules: [require.resolve('nestjs-temporal-core/dist/observability/workflow-interceptors')],
+});
 await writeFile('dist/workflow-bundle.js', code);
 ```
 
@@ -80,7 +84,7 @@ worker: {
 }
 ```
 
-Prebuilt bundles are not touched by this library, so add any workflow interceptor modules (for example `nestjs-temporal-core/dist/observability/workflow-interceptors` for correlation ids) when you build.
+Prebuilt bundles are not touched by this library, so add any workflow interceptor modules (for example `nestjs-temporal-core/dist/observability/workflow-interceptors` for correlation ids) through `workflowInterceptorModules` when you build. `autoBundle` does this for you: interceptor modules configured on the worker are bundled in.
 
 ## Recipes
 

@@ -10,8 +10,7 @@ The package includes comprehensive health monitoring capabilities for production
 ```typescript
 // app.module.ts
 import { Module } from '@nestjs/common';
-import { TemporalModule } from 'nestjs-temporal-core';
-import { TemporalHealthModule } from 'nestjs-temporal-core/health';
+import { TemporalModule, TemporalHealthModule } from 'nestjs-temporal-core';
 
 @Module({
   imports: [
@@ -23,11 +22,23 @@ import { TemporalHealthModule } from 'nestjs-temporal-core/health';
         activityClasses: [MyActivity],
       },
     }),
-    TemporalHealthModule, // Adds /health/temporal endpoint
+    TemporalHealthModule, // Adds GET /temporal/health
   ],
 })
 export class AppModule {}
 ```
+
+`TemporalHealthModule` is exported from the main entry point. The endpoint is `GET /temporal/health` and returns the overall status (`healthy`, `degraded` or `unhealthy`) plus client, worker, discovery, schedule and metadata details.
+
+To expose only `{ status, timestamp }` on a public route, register it with `detail: 'minimal'`:
+
+```typescript
+TemporalHealthModule.register({ detail: 'minimal' })
+```
+
+## Terminus
+
+If you use `@nestjs/terminus`, `nestjs-temporal-core/terminus` provides `TemporalHealthIndicator`. See [Security](./security.md#terminus).
 
 ## Custom Health Checks
 
@@ -41,27 +52,29 @@ export class HealthController {
     const health = this.temporal.getHealth();
 
     return {
-      status: health.overallHealth,
+      status: health.status,
       timestamp: new Date(),
+      namespace: health.namespace,
       services: {
         client: {
-          healthy: health.client.status === 'healthy',
-          connection: health.client.connectionStatus,
+          healthy: health.services.client.status === 'healthy',
+          connected: health.summary.clientConnected,
         },
         worker: {
-          healthy: health.worker.status === 'healthy',
-          state: health.worker.state,
-          activitiesRegistered: health.worker.activitiesCount,
+          healthy: health.services.worker.status === 'healthy',
+          running: health.summary.workerRunning,
         },
         discovery: {
-          healthy: health.discovery.status === 'healthy',
-          activitiesDiscovered: health.discovery.activitiesDiscovered,
+          healthy: health.services.discovery.status === 'healthy',
+          activities: health.summary.totalActivities,
         },
       },
-      uptime: health.uptime,
+      uptime: process.uptime(),
     };
   }
 }
 ```
+
+`getHealth()` is synchronous and reads the current state of each service. `await temporal.getOverallHealth()` returns the same data as per-component results with a `timestamp`.
 
 Next: [Troubleshooting](./troubleshooting.md).

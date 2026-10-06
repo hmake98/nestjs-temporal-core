@@ -118,7 +118,7 @@ const moduleRef = await overrideActivity(builder, PaymentActivities, mock).compi
 
 ## Run workflows against a real test server
 
-`TemporalTestEnvironment` starts a local Temporal test server and boots your Nest app against it, workers included. Needs `@temporalio/testing` (an optional peer).
+`TemporalTestEnvironment` starts a local Temporal test server and boots your Nest app against it, workers included. Needs `@nestjs/testing` and `@temporalio/testing` (optional peers).
 
 ```typescript
 import { TemporalService } from 'nestjs-temporal-core';
@@ -138,12 +138,15 @@ describe('reminder workflow', () => {
       activityClasses: [EmailActivities],
     });
 
-    const started = await app.get(TemporalService).startWorkflow('reminderWorkflow', [], { taskQueue });
+    const started = await app
+      .get(TemporalService)
+      .startWorkflow<{ result: () => Promise<string> }>('reminderWorkflow', [], { taskQueue });
     await expect(started.result?.result()).resolves.toBe('sent'); // a 24h timer, returns at once
   });
 });
 ```
 
+- `startWorkflow` resolves to `{ success, result }` where `result` is the workflow handle, hence the type argument and `result?.result()` above.
 - `timeSkipping: true` fast-forwards timers while a workflow result is awaited, and `testEnv.sleep(ms)` skips ahead on demand. In this mode the Nest app's `TEMPORAL_CLIENT` is the environment's own client, so `TemporalService` calls skip time too.
 - Without it you get a real dev server and real time.
 - Every `createApp()` gets a unique task queue, so test files sharing a server never see each other's tasks. Apps are closed by `teardown()`.

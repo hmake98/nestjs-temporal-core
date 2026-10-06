@@ -37,7 +37,7 @@ src/
     reflect-metadata.d.ts      # Ambient Reflect.metadata typings
 ```
 
-Each folder (`decorators/`, `utils/`, `workflow-proxy/`) and `src/` itself re-exports its public surface via `index.ts`. Tests live under `test/unit`; `test/integration` is referenced by `package.json` scripts but doesn't currently exist — check before assuming it's present.
+Each folder (`decorators/`, `utils/`, `workflow-proxy/`) and `src/` itself re-exports its public surface via `index.ts`. Tests live under `test/unit` (mocked SDK, run by `npm test`), `test/integration` (real Temporal dev server, `npm run test:integration`) and `test/e2e` (compiled Nest app booted from output, `npm run test:e2e`). `examples/api-worker` is a runnable API + worker example with its own tests.
 
 ## Key Patterns
 
