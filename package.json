@@ -1,6 +1,6 @@
 {
   "name": "nestjs-temporal-core",
-  "version": "3.4.0",
+  "version": "3.5.0",
   "description": "Complete NestJS integration for Temporal.io with auto-discovery, declarative scheduling, enhanced monitoring, and enterprise-ready features",
   "author": "Harsh M",
   "license": "MIT",
