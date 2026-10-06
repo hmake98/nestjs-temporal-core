@@ -13,7 +13,8 @@ title: Troubleshooting
 ```typescript
 // Check connection configuration
 const health = temporalService.getHealth();
-console.log('Connection status:', health.client.connectionStatus);
+console.log('Client connected:', health.summary.clientConnected);
+console.log('Client status:', health.services.client.status);
 
 // Verify Temporal server is running
 // docker ps | grep temporal
@@ -54,7 +55,7 @@ export class MyActivity {
 
 // 4. Check discovery status
 const health = temporalService.getHealth();
-console.log('Activities discovered:', health.discovery.activitiesDiscovered);
+console.log('Activities discovered:', health.summary.totalActivities);
 ```
 
 ### 3. Workflow Registration Issues
@@ -125,14 +126,11 @@ TemporalModule.register({
   connection: {
     address: 'localhost:7233',
   },
-  worker: {
-    debugMode: true, // If available
-  },
 })
 
 // Check detailed health and statistics
 const health = temporalService.getHealth();
-const stats = temporalService.getStatistics();
+const stats = temporalService.getStats();
 console.log('Health:', JSON.stringify(health, null, 2));
 console.log('Stats:', JSON.stringify(stats, null, 2));
 ```

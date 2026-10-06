@@ -81,3 +81,59 @@ await temporalService.deleteSchedule('daily-report');
 ```
 
 All three return `{ success, scheduleId, error? }`; check `success` and read `error` (and `error.cause`) on failure.
+
+## Retryable vs non-retryable activity errors
+
+By default Temporal retries any error an activity throws until the retry policy is exhausted. A validation failure or a 404 will never succeed on retry, so retrying only delays the failure. Turn on `errorMapping` to stop that:
+
+```typescript
+TemporalModule.register({
+  connection: { address: 'localhost:7233' },
+  taskQueue: 'orders',
+  errorMapping: true,
+});
+```
+
+It is **off by default**; with it off, activity handlers reach the SDK untouched. When on, errors thrown by activities are mapped in this order:
+
+1. A Temporal failure (`ApplicationFailure`, `CancelledFailure`, ...) is left exactly as thrown. You already chose its retry behavior.
+2. `@NonRetryable()` on the method or class (below).
+3. Your `mapper`, if you set one.
+4. The default map: a Nest `HttpException` with a 4xx status is non-retryable, **except 408 and 429**, which are worth retrying. 5xx and every other error stay retryable.
+
+A non-retryable error becomes an `ApplicationFailure` with `nonRetryable: true`, the original error as `cause`, the original stack, and `type` set to the error's `name`.
+
+### `@NonRetryable()`
+
+```typescript
+import { Activity, ActivityMethod, NonRetryable } from 'nestjs-temporal-core';
+
+@Activity()
+export class PaymentActivities {
+  @ActivityMethod()
+  @NonRetryable([CardDeclinedError])   // only these errors are final
+  async charge(order: Order) { /* ... */ }
+
+  @ActivityMethod()
+  @NonRetryable({ type: 'ValidationFailed' })   // any error is final
+  async validate(order: Order) { /* ... */ }
+}
+```
+
+Put it on the class to cover every method. It does nothing unless `errorMapping` is on.
+
+### Custom mapping
+
+```typescript
+errorMapping: {
+  mapper: (error, { activityName }) =>
+    error instanceof AxiosError && error.response?.status === 404
+      ? ApplicationFailure.nonRetryable('not found', 'NotFound')
+      : undefined, // undefined = let the default map decide
+  nonRetryableStatuses: [400, 401, 403, 404, 422], // replaces the default 4xx set
+  defaultMap: true,
+}
+```
+
+Set `defaultMap: false` to use only `@NonRetryable()` and your `mapper`.
+

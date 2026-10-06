@@ -15,6 +15,8 @@ npm install nestjs-temporal-core @temporalio/client @temporalio/worker @temporal
 npm install @nestjs/common @nestjs/core reflect-metadata rxjs
 ```
 
+Supported ranges: NestJS 9 to 12, and `@temporalio/*` `^1.15.0 || ^1.19.0`. Node.js >= 20.3.0 is required.
+
 ## Quick Start
 
 ### 1. Enable Shutdown Hooks
@@ -217,9 +219,9 @@ export class PaymentService {
 
 ## Module Variants
 
-The package provides modular architecture with separate modules for different use cases:
+There is one module, `TemporalModule`. What it sets up depends on the options you pass.
 
-### 1. Unified Module (Recommended)
+### 1. Client and Worker (Recommended)
 
 Complete integration with both client and worker capabilities:
 
@@ -236,58 +238,24 @@ TemporalModule.register({
 })
 ```
 
-### 2. Client-Only Module
+### 2. Client-Only
 
-For services that only need to start/query workflows:
+For services that only need to start/query workflows. Omit `worker` (and `workers`) and no worker is created:
 
 ```typescript
-import { TemporalClientModule } from 'nestjs-temporal-core/client';
-
-TemporalClientModule.register({
-  connection: { address: 'localhost:7233' },
-  namespace: 'default',
+TemporalModule.register({
+  connection: { address: 'localhost:7233', namespace: 'default' },
+  taskQueue: 'my-queue',
+  isGlobal: true,
 })
 ```
 
-### 3. Worker-Only Module
+### 3. Worker-Only
 
-For dedicated worker processes:
+For dedicated worker processes without an HTTP server, see [Worker-Only Apps](./worker-only-apps.md).
 
-```typescript
-import { TemporalWorkerModule } from 'nestjs-temporal-core/worker';
+### 4. Several Task Queues
 
-TemporalWorkerModule.register({
-  connection: { address: 'localhost:7233' },
-  taskQueue: 'worker-queue',
-  worker: {
-    workflowsPath: require.resolve('./workflows'),
-    activityClasses: [BackgroundActivity],
-  },
-})
-```
-
-### 4. Activity-Only Module
-
-For standalone activity management:
-
-```typescript
-import { TemporalActivityModule } from 'nestjs-temporal-core/activity';
-
-TemporalActivityModule.register({
-  activityClasses: [DataProcessingActivity],
-})
-```
-
-### 5. Schedules-Only Module
-
-For managing Temporal schedules:
-
-```typescript
-import { TemporalSchedulesModule } from 'nestjs-temporal-core/schedules';
-
-TemporalSchedulesModule.register({
-  connection: { address: 'localhost:7233' },
-})
-```
+Use `workers: []` instead of `worker` to run one worker per task queue in the same process. See [Configuration](./configuration.md#multiple-workers-configuration).
 
 Next: [Configuration](./configuration.md).

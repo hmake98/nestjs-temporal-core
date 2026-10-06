@@ -28,6 +28,13 @@ import { TemporalDiscoveryService } from './temporal-discovery.service';
 import { withCorrelationWorkerOptions, withDataConverter } from '../observability/apply';
 import { installRuntime } from '../observability/runtime';
 import { enforceConnectionSecurity } from '../security';
+import { wrapActivities } from '../error-mapping';
+import {
+    buildWorkflowBundle,
+    resolveWorkflowsPath,
+    tryResolveWorkflowsPath,
+    validateAutoBundle,
+} from '../workflow-bundle';
 import { createLogger, TemporalLogger } from '../utils/logger';
 
 /**
@@ -287,18 +294,11 @@ export class TemporalWorkerManagerService
             taskQueue: workerDef.taskQueue,
             namespace: this.options.connection?.namespace || 'default',
             connection: this.connection!,
-            activities: Object.fromEntries(activities),
+            activities: wrapActivities(Object.fromEntries(activities), this.options.errorMapping),
         };
 
         // Add workflow configuration
-        if (workerDef.workflowsPath) {
-            workerConfig.workflowsPath = workerDef.workflowsPath;
-        } else if (workerDef.workflowBundle) {
-            // `workflowBundle` on WorkerDefinition is intentionally loose for
-            // back-compat; Temporal SDK validates the shape at runtime.
-            workerConfig.workflowBundle =
-                workerDef.workflowBundle as WorkerConfig['workflowBundle'];
-        }
+        await this.applyWorkflowSource(workerConfig, workerDef);
 
         // Create the worker
         const { Worker } = await import('@temporalio/worker');
@@ -1011,6 +1011,7 @@ export class TemporalWorkerManagerService
         if (this.options.worker?.workflowsPath && this.options.worker?.workflowBundle) {
             throw new Error('Cannot specify both workflowsPath and workflowBundle');
         }
+        validateAutoBundle(this.options.worker, 'worker');
     }
 
     /**
@@ -1207,20 +1208,15 @@ export class TemporalWorkerManagerService
             taskQueue,
             namespace,
             connection: this.connection,
-            activities: Object.fromEntries(this.activities),
+            activities: wrapActivities(
+                Object.fromEntries(this.activities),
+                this.options.errorMapping,
+            ),
         };
 
         // Add workflow configuration
-        if (this.options.worker?.workflowsPath) {
-            config.workflowsPath = this.options.worker.workflowsPath;
-            this.logger.verbose(`Using workflows from: ${this.options.worker.workflowsPath}`);
-        } else if (this.options.worker?.workflowBundle) {
-            // `workflowBundle` on TemporalOptions is intentionally loose for
-            // back-compat; Temporal SDK validates the shape at runtime.
-            config.workflowBundle = this.options.worker
-                .workflowBundle as WorkerConfig['workflowBundle'];
-            this.logger.verbose('Using workflow bundle');
-        } else {
+        const hasWorkflows = await this.applyWorkflowSource(config, this.options.worker ?? {});
+        if (!hasWorkflows) {
             this.logger.warn('No workflow configuration - worker will only handle activities');
         }
 
@@ -1297,12 +1293,75 @@ export class TemporalWorkerManagerService
     // Shared Helpers
     // ==========================================
 
+    /**
+     * Set the workflow source on a worker config: a path (validated, then bundled when
+     * `autoBundle` is on), or a prebuilt bundle. Returns false when neither is configured.
+     */
+    private async applyWorkflowSource(
+        config: WorkerConfig,
+        source: Pick<WorkerDefinition, 'workflowsPath' | 'workflowBundle' | 'autoBundle'>,
+    ): Promise<boolean> {
+        if (source.workflowsPath) {
+            let workflowsPath = source.workflowsPath;
+            if (source.autoBundle) {
+                workflowsPath = resolveWorkflowsPath(source.workflowsPath);
+                const given = source.autoBundle === true ? {} : source.autoBundle;
+                // The SDK ignores `interceptors.workflowModules` once a prebuilt bundle is set,
+                // so modules added for the worker (for example correlation) are baked into the
+                // bundle here instead.
+                const workflowModules = config.interceptors?.workflowModules ?? [];
+                const autoBundleOptions = {
+                    ...given,
+                    bundlerOptions: {
+                        ...given.bundlerOptions,
+                        workflowInterceptorModules: [
+                            ...new Set([
+                                ...(given.bundlerOptions?.workflowInterceptorModules ?? []),
+                                ...workflowModules,
+                            ]),
+                        ],
+                    },
+                };
+                if (config.interceptors?.workflowModules) {
+                    config.interceptors = { ...config.interceptors, workflowModules: undefined };
+                }
+                const bundle = await buildWorkflowBundle(workflowsPath, autoBundleOptions);
+                config.workflowBundle = { code: bundle.code };
+                this.logger.info(
+                    `Workflow bundle ${bundle.cached ? 'loaded from cache' : 'built'} ` +
+                        `(${bundle.hash.slice(0, 12)}) from ${workflowsPath}`,
+                );
+            } else {
+                const resolved = tryResolveWorkflowsPath(source.workflowsPath);
+                if (resolved.error) {
+                    // Not fatal here: keep the path as given and let the SDK report it.
+                    this.logger.warn(resolved.error.message);
+                } else {
+                    workflowsPath = resolved.path as string;
+                }
+                config.workflowsPath = workflowsPath;
+                this.logger.verbose(`Using workflows from: ${workflowsPath}`);
+            }
+            return true;
+        }
+        if (source.workflowBundle) {
+            // `workflowBundle` is intentionally loose for back-compat; the Temporal SDK
+            // validates the shape at runtime.
+            config.workflowBundle = source.workflowBundle as WorkerConfig['workflowBundle'];
+            this.logger.verbose('Using workflow bundle');
+            return true;
+        }
+        return false;
+    }
+
     private getWorkflowSource(config?: {
         workflowBundle?: unknown;
         workflowsPath?: string;
+        autoBundle?: unknown;
     }): 'bundle' | 'filesystem' | 'registered' | 'none' {
         const source = config ?? this.options.worker;
         if (source?.workflowBundle) return 'bundle';
+        if (source?.workflowsPath && source?.autoBundle) return 'bundle';
         if (source?.workflowsPath) return 'filesystem';
         return 'none';
     }

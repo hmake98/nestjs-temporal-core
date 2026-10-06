@@ -116,6 +116,62 @@ const mock = { charge: jest.fn().mockResolvedValue('mocked') }; // vi.fn() with 
 const moduleRef = await overrideActivity(builder, PaymentActivities, mock).compile();
 ```
 
+## Run workflows against a real test server
+
+`TemporalTestEnvironment` starts a local Temporal test server and boots your Nest app against it, workers included. Needs `@nestjs/testing` and `@temporalio/testing` (optional peers).
+
+```typescript
+import { TemporalService } from 'nestjs-temporal-core';
+import { TemporalTestEnvironment } from 'nestjs-temporal-core/testing';
+
+describe('reminder workflow', () => {
+  let testEnv: TemporalTestEnvironment;
+
+  beforeAll(async () => {
+    testEnv = await TemporalTestEnvironment.create({ timeSkipping: true });
+  });
+  afterAll(() => testEnv.teardown());
+
+  it('sends the reminder after a day, instantly', async () => {
+    const { app, taskQueue } = await testEnv.createApp({
+      options: { worker: { workflowsPath: require.resolve('./workflows') } },
+      activityClasses: [EmailActivities],
+    });
+
+    const started = await app
+      .get(TemporalService)
+      .startWorkflow<{ result: () => Promise<string> }>('reminderWorkflow', [], { taskQueue });
+    await expect(started.result?.result()).resolves.toBe('sent'); // a 24h timer, returns at once
+  });
+});
+```
+
+- `startWorkflow` resolves to `{ success, result }` where `result` is the workflow handle, hence the type argument and `result?.result()` above.
+- `timeSkipping: true` fast-forwards timers while a workflow result is awaited, and `testEnv.sleep(ms)` skips ahead on demand. In this mode the Nest app's `TEMPORAL_CLIENT` is the environment's own client, so `TemporalService` calls skip time too.
+- Without it you get a real dev server and real time.
+- Every `createApp()` gets a unique task queue, so test files sharing a server never see each other's tasks. Apps are closed by `teardown()`.
+- `testEnv.env` is the underlying `TestWorkflowEnvironment`, `testEnv.client` its client, and `testEnv.moduleOptions()` the connection options if you build the module yourself.
+- The first run downloads the server binary. Pass `downloadDir` (or set `TEMPORAL_DEV_SERVER_DIR`) and cache that directory in CI.
+
+## Catch non-deterministic changes with replay
+
+Editing a workflow in place can break workflows already running in production. Replay old histories against the new code to find out before deploying. No server needed.
+
+```typescript
+import { assertReplays, readHistoryFile } from 'nestjs-temporal-core/testing';
+
+it('still replays production histories', async () => {
+  await assertReplays(
+    { workflowsPath: require.resolve('./workflows') },
+    [readHistoryFile('./histories/order-42.json'), readHistoryFile('./histories/order-43.json')],
+  );
+});
+```
+
+- Save histories with `temporal workflow show --workflow-id <id> --output json > histories/<id>.json`, or in code with `handle.fetchHistory()`.
+- `replayHistories()` returns one outcome per history (`error` is set on failure, usually a `DeterminismViolationError`). `assertReplays()` throws `ReplayFailedError` listing every failing history.
+- A failure means the change is not backward compatible. Use `patched()` or ship a new workflow type.
+
 ## Vitest
 
 Nest relies on `emitDecoratorMetadata`, which Vitest's default transform (esbuild) does not emit. Add `unplugin-swc` to your Vitest config, as described in the NestJS testing docs. The helpers themselves need no changes; use `vi.fn()` where the examples use `jest.fn()`.

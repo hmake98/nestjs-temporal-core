@@ -1,6 +1,7 @@
 // Workflow code runs inside the Temporal v8 sandbox: only @temporalio/workflow imports.
 import {
     condition,
+    sleep,
     defineQuery,
     defineSignal,
     defineUpdate,
@@ -68,4 +69,26 @@ export async function slowWorkflow(ms: number): Promise<string> {
 /** Returns whatever correlation id the activity sees. */
 export async function correlationWorkflow(): Promise<string | undefined> {
     return currentId();
+}
+
+interface FailingActivities {
+    httpFail(): Promise<void>;
+    decoratedFail(): Promise<void>;
+    plainFail(): Promise<void>;
+}
+
+const failing = proxyActivities<FailingActivities>({
+    startToCloseTimeout: '10 seconds',
+    retry: { maximumAttempts: 3, initialInterval: '10 milliseconds', backoffCoefficient: 1 },
+});
+
+/** Runs one of the failing activities; the retry policy allows 3 attempts. */
+export async function failingWorkflow(which: keyof FailingActivities): Promise<void> {
+    await failing[which]();
+}
+
+/** Waits a day on a timer: only finishes quickly under a time-skipping server. */
+export async function sleeperWorkflow(): Promise<string> {
+    await sleep('1 day');
+    return 'slept';
 }

@@ -7,6 +7,7 @@ import {
     TEMPORAL_UPDATE_METHOD,
     TEMPORAL_CHILD_WORKFLOW,
 } from '../constants';
+import { bindActivityHandler } from '../error-mapping/non-retryable.decorator';
 import { createLogger, TemporalLogger } from '../utils/logger';
 import {
     ActivityMethodMetadataResult,
@@ -254,7 +255,7 @@ export class TemporalMetadataAccessor {
                                     className: prototype.constructor?.name || 'Unknown',
                                     ...metadata, // Spread the full metadata into options
                                 },
-                                handler: prototype[methodName].bind(instance),
+                                handler: bindActivityHandler(prototype, methodName, instance),
                             });
                             extractedCount++;
                             this.logger.debug(`Found activity method: ${activityName}`);
@@ -296,7 +297,7 @@ export class TemporalMetadataAccessor {
                                     className: prototype.constructor?.name || 'Unknown',
                                     ...methodMetadata, // Spread the full metadata into options
                                 },
-                                handler: prototype[propertyName].bind(instance),
+                                handler: bindActivityHandler(prototype, propertyName, instance),
                             });
                             extractedCount++;
                             this.logger.debug(`Found activity method: ${activityName}`);

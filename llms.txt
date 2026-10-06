@@ -1,0 +1,34 @@
+# nestjs-temporal-core
+
+> NestJS integration for Temporal.io: auto-discovered activities, worker lifecycle, typed client facade, schedules, health checks, and opt-in bundling, error mapping, observability, encryption and test utilities. Peer-dependency library for NestJS 9-12 and @temporalio/* 1.15+.
+
+Core rule: workflows are plain exported functions in a deterministic sandbox (import only `@temporalio/workflow`); activities are Nest providers (`@Activity` + `@ActivityMethod`) that do all I/O. Register once with `TemporalModule.register({ connection, taskQueue, worker: { workflowsPath, activityClasses } })`. Start workflows with `TemporalService.startWorkflow(type, args, { taskQueue, workflowId })`.
+
+## Docs
+
+- [Agent guide](https://hmake98.github.io/nestjs-temporal-core/docs/agent-guide): decision table, file layout, exact patterns, common errors and fixes
+- [Getting started](https://hmake98.github.io/nestjs-temporal-core/docs/getting-started): install, module, first activity and workflow
+- [Core concepts](https://hmake98.github.io/nestjs-temporal-core/docs/core-concepts): workflows, activities, signals, queries, updates
+- [Configuration](https://hmake98.github.io/nestjs-temporal-core/docs/configuration): every module option
+- [Testing](https://hmake98.github.io/nestjs-temporal-core/docs/testing): fakes, activity harness, test environment, replay
+- [Error handling](https://hmake98.github.io/nestjs-temporal-core/docs/error-handling): TemporalClientError, errorMapping, @NonRetryable
+- [Bundling](https://hmake98.github.io/nestjs-temporal-core/docs/bundling): workflowsPath, autoBundle, prebuilt bundles
+- [Observability](https://hmake98.github.io/nestjs-temporal-core/docs/observability): logs, correlation ids, OpenTelemetry
+- [Security](https://hmake98.github.io/nestjs-temporal-core/docs/security): payload encryption, TLS checks
+- [Worker-only apps](https://hmake98.github.io/nestjs-temporal-core/docs/worker-only-apps)
+- [Troubleshooting](https://hmake98.github.io/nestjs-temporal-core/docs/troubleshooting)
+- [Migration guide](https://hmake98.github.io/nestjs-temporal-core/docs/migration-guide): including from `nestjs-temporal`
+
+## Entry points
+
+- `nestjs-temporal-core`: module, decorators, services, errors, utilities. Never loads optional peers.
+- `nestjs-temporal-core/testing`: TemporalTestingModule, createActivityHarness, TemporalTestEnvironment, replayHistories (optional peers: @nestjs/testing, @temporalio/testing)
+- `nestjs-temporal-core/otel`: createTemporalOpenTelemetry (optional peers: OpenTelemetry packages)
+- `nestjs-temporal-core/encryption`: AES-GCM payload codec
+- `nestjs-temporal-core/terminus`: health indicator (optional peer: @nestjs/terminus)
+
+## Optional
+
+- [API reference](https://hmake98.github.io/nestjs-temporal-core/docs/api)
+- [Repository](https://github.com/hmake98/nestjs-temporal-core)
+- [Changelog](https://github.com/hmake98/nestjs-temporal-core/blob/main/CHANGELOG.md)

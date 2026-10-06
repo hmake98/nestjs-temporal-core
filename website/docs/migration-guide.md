@@ -172,3 +172,97 @@ await scheduleService.pauseSchedule('daily-report');
 await scheduleService.triggerSchedule('daily-report');
 await scheduleService.deleteSchedule('daily-report');
 ```
+
+## Migrating from `nestjs-temporal`
+
+[`nestjs-temporal`](https://www.npmjs.com/package/nestjs-temporal) (by KurtzL) is the other common Temporal module for Nest. Both wrap the same SDK, so workflows, activities' bodies and Temporal data do not change: you swap the Nest wiring. Workflow code is untouched, and running workflows keep running because task queues, workflow types and activity names stay the same.
+
+### Install
+
+```bash
+npm uninstall nestjs-temporal
+npm install nestjs-temporal-core
+```
+
+### What maps to what
+
+| `nestjs-temporal` | `nestjs-temporal-core` |
+| --- | --- |
+| `TemporalModule.registerWorker({ workerOptions })` | `TemporalModule.register({ taskQueue, worker: { workflowsPath, activityClasses } })` |
+| `TemporalModule.registerWorkerAsync({ useFactory })` | `TemporalModule.registerAsync({ useFactory })` |
+| `TemporalModule.registerClient()` | Same `register()`: the client is always available |
+| `TemporalModule.registerClientAsync({ useFactory })` | `registerAsync`, with `connection` in the returned options |
+| Several `registerWorker` calls | One `register({ workers: [{ taskQueue, activityClasses, workflowsPath }, ...] })` |
+| `@Activities()` on the class | `@Activity()` on the class |
+| `@Activity()` on a method | `@ActivityMethod()` on the method |
+| `@InjectTemporalClient() client: WorkflowClient` | `TemporalService` (recommended), or `@Inject(TEMPORAL_CLIENT) client: Client` |
+| `client.start('example', { args, taskQueue, workflowId })` | `temporal.startWorkflow('example', args, { taskQueue, workflowId })` |
+| `workerOptions.workflowBundle` | `worker.workflowBundle`, or `worker.autoBundle` (cached bundling) |
+| `workerOptions.connection` (a `NativeConnection` you built) | Not needed: pass `connection: { address, tls, apiKey }` and the library connects |
+
+### Before and after
+
+```typescript
+// before
+@Module({
+  imports: [
+    TemporalModule.registerWorker({
+      workerOptions: { taskQueue: 'default', workflowsPath: require.resolve('./temporal/workflow') },
+    }),
+    TemporalModule.registerClient(),
+  ],
+})
+export class AppModule {}
+
+@Injectable()
+@Activities()
+export class GreetingActivity {
+  @Activity()
+  async greeting(name: string) { return 'Hello ' + name; }
+}
+
+const handle = await this.temporalClient.start('example', { args: ['Temporal'], taskQueue: 'default', workflowId: 'wf-1' });
+```
+
+```typescript
+// after
+@Module({
+  imports: [
+    TemporalModule.register({
+      connection: { address: 'localhost:7233' },
+      taskQueue: 'default',
+      worker: {
+        workflowsPath: require.resolve('./temporal/workflow'),
+        activityClasses: [GreetingActivity],
+      },
+    }),
+  ],
+  providers: [GreetingActivity],
+})
+export class AppModule {}
+
+@Injectable()
+@Activity()
+export class GreetingActivity {
+  @ActivityMethod()
+  async greeting(name: string) { return 'Hello ' + name; }
+}
+
+const { result: handle } = await this.temporal.startWorkflow('example', ['Temporal'], { taskQueue: 'default', workflowId: 'wf-1' });
+```
+
+### Steps
+
+1. Replace the module registrations as in the table. List your activity classes in `worker.activityClasses` **and** in `providers`.
+2. Rename the decorators: class `@Activities()` becomes `@Activity()`, method `@Activity()` becomes `@ActivityMethod()`. The activity name defaults to the method name, as before; pass a string to `@ActivityMethod('name')` to keep an explicit name.
+3. Replace `@InjectTemporalClient()` call sites with `TemporalService`. If you need the raw SDK client, `@Inject(TEMPORAL_CLIENT)` gives a `Client` (`client.workflow.start(...)`, not `WorkflowClient.start`).
+4. Keep your workflow files as they are. `proxyActivities<IGreetingActivity>()` interfaces and `import type` of the activity class both still work.
+5. Add `app.enableShutdownHooks()` in `main.ts` so the worker drains on shutdown.
+6. Run your tests. `TemporalTestingModule` replaces `TemporalService` with a recording fake, so unit tests need no server.
+
+### Differences to know
+
+- `startWorkflow` returns `{ success, result, executionTime }`, where `result` is the SDK workflow handle. Failures throw a `TemporalClientError` with the original error as `.cause`.
+- With several workers, always set `activityClasses` per worker, as in `nestjs-temporal`.
+- You no longer call `Runtime.install` or `NativeConnection.connect` yourself. Use the `runtime` option for logging and metrics, and `connection` for TLS and API keys.
+- Extras you get after migrating: schedules (`upsertSchedule`), health checks, `autoBundle`, error mapping, correlation ids, payload encryption and test utilities. See the other guides.

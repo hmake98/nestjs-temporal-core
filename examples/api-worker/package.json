@@ -1,0 +1,39 @@
+{
+  "name": "api-worker-example",
+  "version": "0.0.0",
+  "private": true,
+  "description": "HTTP API + Temporal worker on nestjs-temporal-core, with tests and optional OpenTelemetry",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "start:api": "node dist/main.js",
+    "start:worker": "node dist/worker.js",
+    "test": "jest",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/platform-express": "^11.0.0",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/resources": "^1.25.1",
+    "@opentelemetry/sdk-trace-base": "^1.25.1",
+    "@opentelemetry/sdk-trace-node": "^1.25.1",
+    "@temporalio/client": "^1.24.0",
+    "@temporalio/common": "^1.24.0",
+    "@temporalio/interceptors-opentelemetry": "^1.24.0",
+    "@temporalio/worker": "^1.24.0",
+    "@temporalio/workflow": "^1.24.0",
+    "nestjs-temporal-core": "file:../..",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.0"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^11.0.0",
+    "@temporalio/testing": "^1.24.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.0.0",
+    "jest": "^30.0.0",
+    "ts-jest": "^29.4.0",
+    "typescript": "^5.9.3"
+  }
+}

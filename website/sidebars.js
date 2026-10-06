@@ -3,6 +3,7 @@ const sidebars = {
   guideSidebar: [
     'intro',
     'getting-started',
+    'agent-guide',
     'configuration',
     'core-concepts',
     'advanced-configuration',
@@ -12,6 +13,7 @@ const sidebars = {
     'worker-only-apps',
     'error-handling',
     'observability',
+    'bundling',
     'security',
     'health-monitoring',
     'troubleshooting',

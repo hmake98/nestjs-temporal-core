@@ -10,7 +10,6 @@ Payload encryption, connection checks, safe health endpoints and log redaction. 
 Temporal stores workflow inputs, results, signals and activity payloads in its history, readable by anyone with access to the server or the Web UI. `nestjs-temporal-core/encryption` encrypts them with AES-256-GCM before they leave your process. It uses only Node's `crypto`.
 
 ```typescript
-import { randomBytes } from 'crypto';
 import {
   createEncryptionDataConverter,
   createStaticKeyProvider,

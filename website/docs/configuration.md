@@ -16,7 +16,9 @@ TemporalModule.register({
     workflowsPath: require.resolve('./workflows'),
     activityClasses: [PaymentActivity, EmailActivity],
     autoStart: true,
-    maxConcurrentActivityExecutions: 100,
+    workerOptions: {
+      maxConcurrentActivityTaskExecutions: 100,
+    },
   },
   logLevel: 'info',
   enableLogger: true,
@@ -81,8 +83,8 @@ export class WorkerManagementService {
   async checkWorkerStatus() {
     // Get all workers info
     const workersInfo = this.temporal.getAllWorkers();
-    console.log(`Total workers: ${workersInfo.totalWorkers}`);
-    console.log(`Running workers: ${workersInfo.runningWorkers}`);
+    console.log(`Total workers: ${workersInfo?.totalWorkers}`);
+    console.log(`Running workers: ${workersInfo?.runningWorkers}`);
 
     // Get specific worker status
     const paymentWorkerStatus = this.temporal.getWorkerStatusByTaskQueue('payments-queue');
@@ -180,8 +182,10 @@ export class TemporalConfigService implements TemporalOptionsFactory {
       taskQueue: this.configService.get('TEMPORAL_TASK_QUEUE', 'default'),
       worker: {
         workflowsPath: require.resolve('../workflows'),
-        activityClasses: [], // Populated by module
-        maxConcurrentActivityExecutions: 100,
+        activityClasses: [PaymentActivity, EmailActivity],
+        workerOptions: {
+          maxConcurrentActivityTaskExecutions: 100,
+        },
       },
     };
   }
@@ -250,39 +254,61 @@ TemporalModule.register({
 
 ## Configuration Options Reference
 
+Abridged; see `TemporalOptions` and `WorkerDefinition` in `src/interfaces.ts` for the full shape. Security, correlation, error mapping, runtime and bundling options are covered in their own guides ([Security](./security.md), [Observability](./observability.md), [Error Handling](./error-handling.md), [Bundling](./bundling.md)).
+
 ```typescript
 interface TemporalOptions {
   // Connection settings
-  connection: {
-    address: string;                    // Temporal server address (default: 'localhost:7233')
-    namespace?: string;                 // Temporal namespace (default: 'default')
-    tls?: TLSConfig;                   // TLS configuration for secure connections
+  connection?: {
+    address: string;                    // Temporal server address, with port (required when `connection` is set)
+    namespace?: string;                 // Temporal namespace (falls back to 'default')
+    tls?: boolean | TLSConfig;          // TLS configuration for secure connections
+    apiKey?: string;                    // API key (Temporal Cloud)
+    metadata?: Record<string, string>;  // gRPC metadata
+    interceptors?: ClientInterceptors;  // Client-level interceptors
+    dataConverter?: DataConverter;      // Client-side data converter
+    grpcCompression?: GrpcCompressionConfig;  // Worker connection compression
   };
 
-  // Task queue name
-  taskQueue?: string;                   // Default task queue (default: 'default')
+  // Default task queue (falls back to 'default')
+  taskQueue?: string;
 
-  // Worker configuration
+  // Single worker. Omit both `worker` and `workers` for a client-only app.
   worker?: {
     workflowsPath?: string;             // Path to workflow definitions (use require.resolve)
-    activityClasses?: any[];            // Array of activity classes to register
-    autoStart?: boolean;                // Auto-start worker on module init (default: true)
+    autoBundle?: boolean | AutoBundleOptions;  // Bundle workflows at startup with a content-hash cache
+    workflowBundle?: WorkflowBundleOption;     // Prebuilt bundle (not with workflowsPath)
+    activityClasses?: Type<object>[];   // Activity classes to register
+    autoStart?: boolean;                // Start worker on module init (default: true)
     autoRestart?: boolean;              // Auto-restart on failure (inherits from global)
     maxRestarts?: number;               // Max restart attempts (inherits from global)
-    maxConcurrentActivityExecutions?: number;  // Max concurrent activities (default: 100)
-    maxActivitiesPerSecond?: number;    // Rate limit for activities
+    workerOptions?: WorkerCreateOptions;  // Subset of the SDK WorkerOptions, e.g.
+                                          // maxConcurrentActivityTaskExecutions, maxActivitiesPerSecond
   };
 
+  // Several workers, one per task queue (same fields as `worker`, plus a required `taskQueue`)
+  workers?: WorkerDefinition[];
+
   // Logging
-  logLevel?: 'trace' | 'debug' | 'info' | 'warn' | 'error';  // Log level (default: 'info')
+  logLevel?: 'error' | 'warn' | 'info' | 'debug' | 'verbose';  // Log level (default: 'info')
   enableLogger?: boolean;               // Enable logging (default: true)
 
-  // Auto-restart configuration
+  // Auto-restart configuration (global defaults for all workers)
   autoRestart?: boolean;                // Auto-restart worker on failure (default: true)
   maxRestarts?: number;                 // Max restart attempts before giving up (default: 3)
 
+  // Shutdown
+  enableShutdownHooks?: boolean;        // Declared but currently has no effect: call app.enableShutdownHooks() in main.ts
+  shutdownTimeout?: number;             // Max ms to wait for graceful worker shutdown (default: 30000)
+
   // Advanced
-  isGlobal?: boolean;                   // Make module global (default: false)
+  isGlobal?: boolean;                   // Make module global
+  allowConnectionFailure?: boolean;     // Keep the app running if Temporal is unreachable
+  strictSecurity?: boolean;             // Turn security warnings into startup errors (default: false)
+  dataConverter?: DataConverter;        // One converter for both client and worker
+  correlation?: boolean | CorrelationOptions;  // Correlation id propagation (default: off)
+  errorMapping?: boolean | ErrorMappingOptions; // Activity error mapping (default: off)
+  runtime?: TemporalRuntimeOptions;     // Process-wide SDK runtime (logs, metrics)
 }
 ```
 

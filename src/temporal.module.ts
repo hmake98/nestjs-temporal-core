@@ -17,6 +17,7 @@ import { TemporalOptions } from './interfaces';
 import { TemporalAsyncOptions, TemporalOptionsFactory } from './interfaces';
 import { TemporalConnectionFactory } from './providers/temporal-connection.factory';
 import { WorkflowProxyFactory } from './workflow-proxy/workflow-proxy.factory';
+import { validateAutoBundle } from './workflow-bundle';
 
 /**
  * Main Temporal module for NestJS applications.
@@ -311,11 +312,15 @@ export class TemporalModule {
                 throw new Error('Worker cannot have both workflowsPath and workflowBundle');
             }
 
+            validateAutoBundle(options.worker, 'worker');
+
             // Validate task queue if provided
             if (options.taskQueue && options.taskQueue.trim().length === 0) {
                 throw new Error('Task queue cannot be empty string');
             }
         }
+
+        options.workers?.forEach((w) => validateAutoBundle(w, `workers[${w.taskQueue}]`));
 
         // Validate logger configuration
         if (

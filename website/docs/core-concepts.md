@@ -154,7 +154,7 @@ export async function accountWorkflow(initialBalance: number): Promise<void> {
 }
 ```
 
-Call it from a service via `TemporalClientService`:
+Call it from a service via `TemporalClientService` (reachable as `temporalService.client`; the module exports `TemporalService`, not `TemporalClientService` itself):
 
 ```typescript
 // Wait for the update to complete and get its result
@@ -379,7 +379,7 @@ export class OrderService {
 }
 ```
 
-`WorkflowProxyFactory` is registered globally by `TemporalModule`, so no imports are needed in feature modules.
+`TemporalModule` exports `WorkflowProxyFactory`. It is available in feature modules without importing `TemporalModule` again only when you registered it with `isGlobal: true`; otherwise import `TemporalModule` in the feature module.
 
 ### Proxy method reference
 

@@ -70,7 +70,7 @@ Concurrent requests never share an id (it is stored with `AsyncLocalStorage`).
 Notes:
 
 - The id travels in the `x-correlation-id` header. Workflow code itself cannot read it (the sandbox has no `AsyncLocalStorage`); it is only forwarded.
-- With a prebuilt `workflowBundle`, the SDK ignores `workflowModules`. Add `nestjs-temporal-core/dist/observability/workflow-interceptors` to your bundle's interceptor modules yourself.
+- With `autoBundle`, the workflow-side interceptor modules (correlation, and the OpenTelemetry one) are baked into the generated bundle for you. With a prebuilt `workflowBundle`, the SDK ignores `workflowModules`, so add `nestjs-temporal-core/dist/observability/workflow-interceptors` to your bundle's interceptor modules yourself.
 
 ## Traces (OpenTelemetry)
 
@@ -99,7 +99,7 @@ TemporalModule.register({
 });
 ```
 
-`otel.worker` bundles the activity interceptors, the workflow-side interceptors module (`otel.workflowInterceptorsModule` is its path) and the sink that exports spans created inside workflows. Your tracer provider must be registered with a context manager and the W3C propagator (`provider.register({ contextManager: new AsyncLocalStorageContextManager().enable() })`), otherwise the trace id will not cross the client-to-worker hop.
+`otel.worker` bundles the activity interceptors, the workflow-side interceptors module (`otel.workflowInterceptorsModule` is its path) and the sink that exports spans created inside workflows. Your tracer provider must be registered with a context manager and the W3C propagator (`provider.register({ contextManager: new AsyncLocalStorageContextManager().enable() })`, with `AsyncLocalStorageContextManager` from `@opentelemetry/context-async-hooks`), otherwise the trace id will not cross the client-to-worker hop.
 
 You can combine `otel` with `correlation: true`; the library merges its interceptors with yours.
 

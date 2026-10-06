@@ -4,6 +4,13 @@
 
 ### Changes
 
+- feat: `worker.autoBundle` bundles workflows at startup and caches the bundle by content hash (`cacheDir`, `cache`, `hashPaths`, `bundlerOptions`), so unchanged workflows skip webpack on every restart. Requires `workflowsPath`; cannot be combined with `workflowBundle`.
+- feat: `workflowsPath` is now checked at startup: relative paths resolve against `process.cwd()`, extensionless paths and directories with an `index` file are accepted, and `.ts`/`.js` are swapped when only the other exists (one path works from `src/` and `dist/`). A missing path is a startup error with `autoBundle`; otherwise it is logged as a warning and the SDK reports its own error, as before. `resolveWorkflowsPath()` and `buildWorkflowBundle()` are exported.
+- feat: `errorMapping` option and `@NonRetryable()` decorator. Off by default (activity handlers reach the SDK untouched). When on: `@NonRetryable()` methods/classes, a custom `mapper`, and Nest `HttpException` 4xx (except 408/429) fail the activity without retries, keeping the original error as `cause`. Existing Temporal failures are never remapped.
+- feat: `nestjs-temporal-core/testing` adds `TemporalTestEnvironment` (real test server wired into Nest; with `timeSkipping` the app's `TEMPORAL_CLIENT` skips time too) and `replayHistories` / `assertReplays` / `readHistoryFile` to catch non-deterministic workflow changes.
+- test: `test/e2e` boots a compiled Nest app from `dist`-style output and runs a workflow through `autoBundle`; new `npm run test:e2e` and CI job.
+- docs: "Bundling for Production", "Guide for AI Coding Agents" (and `llms.txt`, shipped in the package), migration guide from `nestjs-temporal`, testing and error-handling additions; `examples/api-worker`.
+- feat: `TemporalHealthIndicator` (`nestjs-temporal-core/terminus`) returns a `down` result instead of throwing `HealthCheckError` (removed in `@nestjs/terminus` 12). Peers widened to NestJS 12 and `@nestjs/terminus` `^11 || ^12`.
 - feat: `nestjs-temporal-core/encryption` entry: AES-256-GCM payload codec (`createEncryptionDataConverter`, `createStaticKeyProvider`, `AesGcmPayloadCodec`) with key ids for rotation, authenticated key id, plaintext pass-through for existing namespaces.
 - feat: module-level `dataConverter` option applied to both client and worker (specific `connection.dataConverter` / `workerOptions.dataConverter` still win).
 - feat: connection security checks: warn on plaintext connections to remote servers (with or without credentials); `strictSecurity: true` makes them startup errors.

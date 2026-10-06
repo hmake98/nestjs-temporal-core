@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "prestart": "cp ../llms.txt static/llms.txt",
     "start": "docusaurus start",
+    "prebuild": "cp ../llms.txt static/llms.txt",
     "build": "docusaurus build",
     "serve": "docusaurus serve",
     "clear": "docusaurus clear",

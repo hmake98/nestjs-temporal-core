@@ -4,10 +4,10 @@
 
 Enterprise-ready [Temporal.io](https://temporal.io/) workflow orchestration for NestJS — auto-discovery, declarative decorators, typed workflow proxies, and built-in monitoring.
 
-![Statements](https://img.shields.io/badge/statements-99.58%25-brightgreen.svg?style=flat)
-![Branches](https://img.shields.io/badge/branches-93.4%25-brightgreen.svg?style=flat)
-![Functions](https://img.shields.io/badge/functions-97.37%25-brightgreen.svg?style=flat)
-![Lines](https://img.shields.io/badge/lines-99.69%25-brightgreen.svg?style=flat)
+![Statements](https://img.shields.io/badge/statements-99.67%25-brightgreen.svg?style=flat)
+![Branches](https://img.shields.io/badge/branches-94.56%25-brightgreen.svg?style=flat)
+![Functions](https://img.shields.io/badge/functions-94.79%25-brightgreen.svg?style=flat)
+![Lines](https://img.shields.io/badge/lines-99.79%25-brightgreen.svg?style=flat)
 [![codecov](https://codecov.io/gh/hmake98/nestjs-temporal-core/branch/main/graph/badge.svg?token=BYSE45L6DI)](https://codecov.io/gh/hmake98/nestjs-temporal-core)
 
 [**📖 Full Documentation**](https://hmake98.github.io/nestjs-temporal-core/) • [NPM](https://www.npmjs.com/package/nestjs-temporal-core) • [GitHub](https://github.com/hmake98/nestjs-temporal-core) • [Example Project](https://github.com/hmake98/nestjs-temporal-core-example)
@@ -25,6 +25,7 @@ Enterprise-ready [Temporal.io](https://temporal.io/) workflow orchestration for 
 | 🛡️ **Type Safety** | Typed workflow proxy (`IWorkflowProxy<T>`) — start/signal/query args and return types inferred from your workflow function |
 | ❤️ **Health Monitoring** | Built-in `/health` endpoint plus programmatic `getHealth()`/`getStatistics()` |
 | 🧩 **Modular Architecture** | Use client-only, worker-only, activity-only, schedules-only, or the full stack |
+| 🧪 **Testable** | Fakes, activity harness, time-skipping test environment and history replay under `nestjs-temporal-core/testing` |
 | 🏭 **Production Grade** | Connection pooling, multi-worker support, graceful shutdown, TLS for Temporal Cloud |
 
 ## Installation
@@ -69,15 +70,21 @@ This README covers only the basics. The [**documentation site**](https://hmake98
 
 | Guide | Covers |
 |---|---|
+| [For AI coding agents](https://hmake98.github.io/nestjs-temporal-core/docs/agent-guide) | Decision table, file layout, exact patterns, common errors; also [`llms.txt`](llms.txt) |
 | [Getting Started](https://hmake98.github.io/nestjs-temporal-core/docs/getting-started) | Installation, quick start, module variants |
 | [Configuration](https://hmake98.github.io/nestjs-temporal-core/docs/configuration) | Basic/multi-worker/async/TLS setup, full options reference |
 | [Core Concepts](https://hmake98.github.io/nestjs-temporal-core/docs/core-concepts) | Activities, workflows, signals/queries, updates, typed workflow proxy |
 | [Advanced Configuration](https://hmake98.github.io/nestjs-temporal-core/docs/advanced-configuration) | Interceptors, gRPC compression, worker versioning, standalone activities, schedule lifecycle |
 | [Advanced Usage](https://hmake98.github.io/nestjs-temporal-core/docs/advanced-usage) | Activity retry policies, workflow testing |
 | [Best Practices](https://hmake98.github.io/nestjs-temporal-core/docs/best-practices) | Do's and don'ts for workflows, activities, config, error handling, testing |
+| [Testing](https://hmake98.github.io/nestjs-temporal-core/docs/testing) | Fakes, activity harness, test environment with time skipping, history replay |
+| [Error Handling](https://hmake98.github.io/nestjs-temporal-core/docs/error-handling) | `TemporalClientError`, opt-in `errorMapping`, `@NonRetryable()` |
+| [Bundling](https://hmake98.github.io/nestjs-temporal-core/docs/bundling) | `workflowsPath`, cached `autoBundle`, prebuilt bundles, Docker/Nx recipes |
+| [Observability](https://hmake98.github.io/nestjs-temporal-core/docs/observability) | SDK logs, correlation ids, OpenTelemetry, metrics |
+| [Security](https://hmake98.github.io/nestjs-temporal-core/docs/security) | Payload encryption, TLS checks, health hardening |
 | [Health Monitoring](https://hmake98.github.io/nestjs-temporal-core/docs/health-monitoring) | Built-in health module, custom health checks |
 | [Troubleshooting](https://hmake98.github.io/nestjs-temporal-core/docs/troubleshooting) | Common issues, debug mode, getting help |
-| [Migration Guide](https://hmake98.github.io/nestjs-temporal-core/docs/migration-guide) | Upgrading across versions and SDK bumps |
+| [Migration Guide](https://hmake98.github.io/nestjs-temporal-core/docs/migration-guide) | Upgrading across versions and SDK bumps, and moving from `nestjs-temporal` |
 | [API Reference](https://hmake98.github.io/nestjs-temporal-core/docs/api) | Generated from source (TSDoc) |
 
 ## Requirements

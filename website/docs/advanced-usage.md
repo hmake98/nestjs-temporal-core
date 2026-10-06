@@ -21,6 +21,8 @@ const paymentActivities = proxyActivities<typeof PaymentActivity.prototype>({
 
 ## Workflow Testing
 
+This example uses the Temporal SDK's own test environment directly. For testing NestJS services that depend on `TemporalService`, the `nestjs-temporal-core/testing` entry point provides `TemporalTestingModule`, `FakeTemporalService` and related helpers.
+
 ```typescript
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { Worker } from '@temporalio/worker';

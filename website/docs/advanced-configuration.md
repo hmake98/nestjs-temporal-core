@@ -69,7 +69,7 @@ worker: {
 
 ## Async Activity Completion
 
-For Activities that complete outside their handler (e.g. a human-in-the-loop approval, or a callback from another process), use the task-token-based completion methods on `TemporalClientService`:
+For Activities that complete outside their handler (e.g. a human-in-the-loop approval, or a callback from another process), use the task-token-based completion methods on `TemporalClientService` (`temporalService.client`):
 
 ```typescript
 await this.clientService.heartbeatActivity(taskToken, { progress: 50 });
@@ -106,7 +106,7 @@ const info = await this.clientService.countStandaloneActivities('ActivityType="s
 
 ## Schedule Lifecycle Management
 
-`TemporalScheduleService` covers the full schedule lifecycle, not just create/get:
+`TemporalScheduleService` (reachable as `temporalService.schedule`) covers the full schedule lifecycle, not just create/get. Its methods return result envelopes (`{ success, scheduleId, error? }`) rather than throwing:
 
 ```typescript
 await this.scheduleService.pauseSchedule('daily-report', 'investigating an incident');
@@ -123,11 +123,11 @@ const { description } = await this.scheduleService.describeSchedule('daily-repor
 
 const { schedules } = this.scheduleService.listSchedules();
 for await (const schedule of schedules ?? []) {
-  console.log(schedule.scheduleId, schedule.info.numActions);
+  console.log(schedule.scheduleId, schedule.state.paused);
 }
 ```
 
-If you register schedules on every application bootstrap, `createSchedule()` throws `ScheduleAlreadyRunning` on the second and subsequent runs. Use `upsertSchedule()` instead — it creates the schedule if it doesn't exist yet, or updates it in place (spec, action, policies, state) if it does:
+If you register schedules on every application bootstrap, `createSchedule()` returns `{ success: false, error }` (the SDK's `ScheduleAlreadyRunning`) on the second and subsequent runs. Use `upsertSchedule()` instead — it creates the schedule if it doesn't exist yet, or updates it in place (spec, action, policies, state) if it does:
 
 ```typescript
 const result = await this.scheduleService.upsertSchedule({

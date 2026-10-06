@@ -17,6 +17,7 @@ export type { Workflow, WorkflowResultType } from '@temporalio/workflow';
 
 import { Type } from '@nestjs/common';
 import type { TemporalRuntimeOptions, CorrelationOptions } from './observability/types';
+import type { ErrorMappingOptions } from './error-mapping/types';
 import {
     ScheduleClient,
     ScheduleHandle,
@@ -178,7 +179,18 @@ export interface RetryPolicyConfig {
  */
 export interface WorkerDefinition {
     taskQueue: string;
+    /**
+     * Where the workflows live. Relative paths resolve against `process.cwd()`, and `.ts` /
+     * `.js` are swapped when only the other exists, so one path works in dev and from `dist/`.
+     * A wrong path fails at startup with a clear message.
+     */
     workflowsPath?: string;
+    /**
+     * Bundle `workflowsPath` at startup instead of leaving it to the SDK, and cache the result
+     * by content hash so an unchanged source skips bundling on every restart. `true` uses
+     * defaults. Requires `workflowsPath`; cannot be combined with `workflowBundle`.
+     */
+    autoBundle?: boolean | AutoBundleOptions;
     /**
      * Workflow bundle. Prefer Temporal SDK's `WorkflowBundleOption`
      * (`{ code }` or `{ codePath }`). Loose shape accepted for backward
@@ -192,6 +204,23 @@ export interface WorkerDefinition {
     /** Maximum restart attempts before giving up (default: 3) */
     maxRestarts?: number;
     workerOptions?: WorkerCreateOptions;
+}
+
+/**
+ * Options for `autoBundle`.
+ */
+export interface AutoBundleOptions {
+    /** Where bundles are cached. Default: `<os tmpdir>/nestjs-temporal-core-bundles`. */
+    cacheDir?: string;
+    /** Set `false` to bundle on every start. Default: `true`. */
+    cache?: boolean;
+    /**
+     * Extra files or directories that feed the cache key. The key already covers the directory
+     * of `workflowsPath`; add the directories of shared code the workflows import from outside it.
+     */
+    hashPaths?: string[];
+    /** Passed to the SDK's `bundleWorkflowCode` (`workflowsPath` is set for you). */
+    bundlerOptions?: Omit<import('@temporalio/worker').BundleOptions, 'workflowsPath'>;
 }
 
 /**
@@ -283,6 +312,12 @@ export interface TemporalOptions extends LoggerConfig {
      */
     strictSecurity?: boolean;
     taskQueue?: string;
+    /**
+     * Map errors thrown by activities to retryable or non-retryable failures: `@NonRetryable()`,
+     * a custom `mapper`, and by default Nest `HttpException` 4xx (except 408/429) as final.
+     * Off by default: with it off, activity handlers reach the SDK untouched.
+     */
+    errorMapping?: boolean | ErrorMappingOptions;
     /** Single-worker config. Equivalent to `Omit<WorkerDefinition, 'taskQueue'>`. */
     worker?: Omit<WorkerDefinition, 'taskQueue'>;
     workers?: WorkerDefinition[];
@@ -293,9 +328,9 @@ export interface TemporalOptions extends LoggerConfig {
     isGlobal?: boolean;
     allowConnectionFailure?: boolean;
     /**
-     * Enable NestJS shutdown hooks to properly handle SIGTERM/SIGINT signals.
-     * When enabled, the module will register shutdown hooks to ensure graceful worker termination.
-     * @default true
+     * Not read by the module today. Call `app.enableShutdownHooks()` in `main.ts` so Nest
+     * delivers SIGTERM/SIGINT to the worker's shutdown hooks.
+     * @deprecated Has no effect.
      */
     enableShutdownHooks?: boolean;
     /**

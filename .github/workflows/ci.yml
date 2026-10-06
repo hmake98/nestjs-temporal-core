@@ -148,6 +148,75 @@ jobs:
       - name: Run integration tests
         run: npm run test:integration
 
+  e2e:
+    name: E2E (compiled app, bundling)
+    runs-on: ubuntu-latest
+    env:
+      TEMPORAL_DEV_SERVER_DIR: ${{ github.workspace }}/.temporal-dev-server
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The dev server binary is downloaded on first use; cache it, keyed on the lockfile (the SDK version moves with it).
+      - name: Cache Temporal dev server
+        uses: actions/cache@v4
+        with:
+          path: .temporal-dev-server
+          key: temporal-dev-server-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            temporal-dev-server-${{ runner.os }}-
+
+      - name: Run e2e tests
+        run: npm run test:e2e
+
+  example:
+    name: Example app (examples/api-worker)
+    runs-on: ubuntu-latest
+    env:
+      TEMPORAL_DEV_SERVER_DIR: ${{ github.workspace }}/.temporal-dev-server
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      # Node 22: the example uses NestJS 11, which runs on Node 20+. No lockfile is committed for
+      # it on purpose: it should keep working against the latest in-range dependencies.
+      - name: Install and build the library
+        run: |
+          npm ci
+          npm run build
+
+      - name: Cache Temporal dev server
+        uses: actions/cache@v4
+        with:
+          path: .temporal-dev-server
+          key: temporal-dev-server-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            temporal-dev-server-${{ runner.os }}-
+
+      # The example installs the freshly built library as a packed copy (see its .npmrc).
+      - name: Install, type-check, build and test the example
+        working-directory: examples/api-worker
+        run: |
+          npm install
+          npm run typecheck
+          npm run build
+          npm test
+
   build:
     name: Build
     runs-on: ubuntu-latest
