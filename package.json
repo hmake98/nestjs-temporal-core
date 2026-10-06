@@ -22,6 +22,7 @@
     "terminus/package.json",
     "LICENSE",
     "README.md",
+    "llms.txt",
     "CHANGELOG.md",
     "jsdoc.json"
   ],

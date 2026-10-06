@@ -52,6 +52,25 @@ describe('replay helpers', () => {
         ]);
     });
 
+    it('resolves workflowsPath like the worker (extensionless, ts/js swap) and fails on a missing one', async () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rp-'));
+        const file = path.join(dir, 'workflows.ts');
+        fs.writeFileSync(file, '');
+        runReplayHistories.mockReturnValue(results());
+        await replayHistories({ workflowsPath: path.join(dir, 'workflows') }, []);
+        expect(runReplayHistories).toHaveBeenLastCalledWith({ workflowsPath: file }, []);
+
+        await expect(
+            replayHistories({ workflowsPath: path.join(dir, 'missing') }, []),
+        ).rejects.toThrow(/was not found/);
+
+        // workflowBundle is passed through untouched
+        runReplayHistories.mockReturnValue(results());
+        await replayHistories({ workflowBundle: { code: 'x' } }, []);
+        expect(runReplayHistories).toHaveBeenLastCalledWith({ workflowBundle: { code: 'x' } }, []);
+        fs.rmSync(dir, { recursive: true });
+    });
+
     it('rejects duplicate workflow ids', async () => {
         await expect(
             replayHistories({ workflowsPath: 'w' }, [

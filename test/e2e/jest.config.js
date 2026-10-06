@@ -1,5 +1,5 @@
 // E2E: compiles a real Nest app and boots it from compiled output. Slower than integration
-// (a tsc build plus a child process), so it runs on PRs that touch bundling and nightly.
+// (a tsc build plus a child process), so it has its own CI job (`e2e`) and `npm run test:e2e`.
 module.exports = {
     preset: 'ts-jest',
     testEnvironment: 'node',

@@ -38,7 +38,6 @@ function listFiles(target: string): string[] {
 
 function sdkVersion(): string {
     try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
         return (require('@temporalio/worker/package.json') as { version: string }).version;
     } catch {
         return 'unknown';

@@ -148,7 +148,7 @@ describe('reminder workflow', () => {
 - Without it you get a real dev server and real time.
 - Every `createApp()` gets a unique task queue, so test files sharing a server never see each other's tasks. Apps are closed by `teardown()`.
 - `testEnv.env` is the underlying `TestWorkflowEnvironment`, `testEnv.client` its client, and `testEnv.moduleOptions()` the connection options if you build the module yourself.
-- The first run downloads the server binary. Pass `downloadDir` and cache that directory in CI.
+- The first run downloads the server binary. Pass `downloadDir` (or set `TEMPORAL_DEV_SERVER_DIR`) and cache that directory in CI.
 
 ## Catch non-deterministic changes with replay
 

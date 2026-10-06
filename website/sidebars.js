@@ -3,6 +3,7 @@ const sidebars = {
   guideSidebar: [
     'intro',
     'getting-started',
+    'agent-guide',
     'configuration',
     'core-concepts',
     'advanced-configuration',

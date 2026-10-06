@@ -45,6 +45,7 @@ lerna-debug.log*
 /website/build
 /website/.docusaurus
 /website/docs/api
+/website/static/llms.txt
 
 # Root docs/ holds only maintainer notes (retired TypeDoc HTML output lives elsewhere now);
 # track the explicit files below, ignore everything else.
@@ -65,3 +66,6 @@ graphify-out/
 # Cached Temporal dev-server binary (integration tests)
 .temporal-dev-server/
 
+/examples/*/node_modules
+/examples/*/dist
+/examples/*/package-lock.json

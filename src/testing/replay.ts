@@ -1,6 +1,7 @@
 import { Worker } from '@temporalio/worker';
 import type { ReplayWorkerOptions } from '@temporalio/worker';
 import * as fs from 'fs';
+import { resolveWorkflowsPath } from '../workflow-bundle';
 
 /** A workflow history to replay. `history` may be the JSON from `temporal workflow show --output json`. */
 export interface ReplayHistory {
@@ -52,7 +53,11 @@ export async function replayHistories(
     if (byId.size !== histories.length) {
         throw new Error('replayHistories: workflowId values must be unique');
     }
-    for await (const result of Worker.runReplayHistories(options, histories as never)) {
+    // Same path rules as the worker: extensionless paths and .ts/.js swaps work.
+    const replayOptions = options.workflowsPath
+        ? { ...options, workflowsPath: resolveWorkflowsPath(options.workflowsPath) }
+        : options;
+    for await (const result of Worker.runReplayHistories(replayOptions, histories as never)) {
         outcomes.push({
             workflowId: result.workflowId,
             runId: result.runId,

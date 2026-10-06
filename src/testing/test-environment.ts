@@ -15,7 +15,10 @@ export interface TemporalTestEnvironmentOptions {
      * dev server, real time). Time skipping downloads a separate test-server binary.
      */
     timeSkipping?: boolean;
-    /** Directory to cache the downloaded server binary (CI: cache this directory). */
+    /**
+     * Directory to cache the downloaded server binary (CI: cache this directory).
+     * Default: the `TEMPORAL_DEV_SERVER_DIR` environment variable, if set.
+     */
     downloadDir?: string;
 }
 
@@ -58,7 +61,7 @@ export class TemporalTestEnvironment {
     static async create(
         options: TemporalTestEnvironmentOptions = {},
     ): Promise<TemporalTestEnvironment> {
-        const { timeSkipping = false, downloadDir } = options;
+        const { timeSkipping = false, downloadDir = process.env.TEMPORAL_DEV_SERVER_DIR } = options;
         if (downloadDir) fs.mkdirSync(downloadDir, { recursive: true });
         // Loaded lazily so `/testing` still imports for users who only need the fakes.
         let testing: typeof import('@temporalio/testing');
